@@ -108,7 +108,8 @@ body {
 }
 
 /* ============ TOP NAVIGATION ============ */
-/* Desktop: frosted glass with blur */
+/* Solid background on all devices — backdrop-filter causes rendering bugs on iOS
+   (gray overlay, fixed-position breakage, and unresponsive touch events). */
 .apple-nav {
   position: fixed;
   top: 0;
@@ -117,15 +118,8 @@ body {
   z-index: 50;
   background: #000000;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-/* Desktop only: add blur effect */
-@media (min-width: 769px) {
-  .apple-nav {
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: saturate(180%) blur(20px);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
-  }
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .nav-link {
@@ -496,15 +490,18 @@ body {
 }
 
 /* ============ MOBILE BOTTOM NAV ============ */
+/* z-index 60 ensures it stays above the top nav (z-50) and any other content. */
 .mobile-bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 50;
+  z-index: 60;
   background: #000000;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding-top: 6px;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 /* iPhone safe area */
@@ -531,11 +528,17 @@ body {
   }
 }
 
-/* ============ MOBILE RESPONSIVE ============ */
+/* ============ MAIN CONTENT AREA ============ */
+/* Padding accounts for fixed top nav (48px on mobile, 80px on desktop)
+   and fixed bottom nav (70px on mobile only). */
+.apple-main {
+  padding-top: 48px;
+}
+
 @media (max-width: 768px) {
-  body main {
-    padding-top: 56px !important;
-    padding-bottom: 70px !important;
+  .apple-main {
+    padding-top: 56px;
+    padding-bottom: 70px;
   }
 
   .apple-input, .apple-select, .apple-textarea {
@@ -574,10 +577,16 @@ body {
 }
 
 @media (min-width: 769px) {
-  body main {
-    padding-top: 80px !important;
-    padding-bottom: 0 !important;
+  .apple-main {
+    padding-top: 80px;
+    padding-bottom: 0;
   }
+}
+
+/* ============ DIVIDER ============ */
+.apple-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 /* Filter grid single column on small mobile */

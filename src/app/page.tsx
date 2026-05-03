@@ -582,9 +582,10 @@ export default function PresensiPage() {
   };
 
   // ============ RENDER ============
+  // Fixed-position nav elements are placed OUTSIDE the flex container to avoid
+  // the iOS Safari bug where position:fixed breaks inside flex containers.
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#000000" }}>
-
+    <>
       {/* ===== Fixed Navigation (Frosted Glass) ===== */}
       {/* Top nav - only shows logo on mobile */}
       <nav className="apple-nav">
@@ -646,7 +647,9 @@ export default function PresensiPage() {
         </div>
       </div>
 
-      <main className="flex-1" style={{ paddingTop: "48px" }}>
+      {/* ===== Main Page Content ===== */}
+      <div className="min-h-screen flex flex-col" style={{ background: "#000000" }}>
+      <main className="flex-1 apple-main">
         {/* Hero Section */}
         <section className="relative text-center px-4 sm:px-6 pb-6 sm:pb-10">
           <div className="hero-glow" />
@@ -1435,6 +1438,18 @@ export default function PresensiPage() {
         </div>
       </main>
 
+      {/* ===== Footer ===== */}
+      <footer className="mt-auto">
+        <div className="apple-divider" />
+        <div className="py-8 text-center">
+          <p className="text-xs text-[#86868b]">
+            Sistem Presensi Digital &copy; {new Date().getFullYear()} &mdash; Universitas Tulungagung
+          </p>
+        </div>
+      </footer>
+
+      </div>
+
       {/* ===== Photo Modal ===== */}
       {selectedPhoto && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.9)" }} onClick={() => setSelectedPhoto(null)}>
@@ -1447,16 +1462,7 @@ export default function PresensiPage() {
         </div>
       )}
 
-      {/* ===== Footer ===== */}
-      <footer className="mt-auto">
-        <div className="apple-divider" />
-        <div className="py-8 text-center">
-          <p className="text-xs text-[#86868b]">
-            Sistem Presensi Digital &copy; {new Date().getFullYear()} &mdash; Universitas Tulungagung
-          </p>
-        </div>
-      </footer>
-    </div>
+    </>
   );
 }
 
