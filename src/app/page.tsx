@@ -586,6 +586,7 @@ export default function PresensiPage() {
     <div className="min-h-screen flex flex-col" style={{ background: "#000000" }}>
 
       {/* ===== Fixed Navigation (Frosted Glass) ===== */}
+      {/* Top nav - only shows logo on mobile */}
       <nav className="apple-nav">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 h-12 flex items-center justify-between">
           {/* Logo */}
@@ -593,7 +594,7 @@ export default function PresensiPage() {
             <div className="w-7 h-7 rounded-lg overflow-hidden flex-shrink-0">
               <Image src="/logo-universitas.png" alt="Logo" width={28} height={28} className="rounded-lg object-contain" />
             </div>
-            <span className="text-sm font-semibold text-[#f5f5f7] tracking-tight hidden sm:inline">Unita</span>
+            <span className="text-sm font-semibold text-[#f5f5f7] tracking-tight">Unita</span>
           </div>
 
           {/* Center Nav Links - Mobile: bottom bar, Desktop: pill nav */}
@@ -626,8 +627,9 @@ export default function PresensiPage() {
           </div>
         </div>
       </nav>
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 apple-nav border-t border-white/[0.06]" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <div className="flex items-center justify-around py-1 px-2">
+      {/* Bottom mobile navigation bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 mobile-bottom-nav" style={{ background: "rgba(0, 0, 0, 0.85)", backdropFilter: "saturate(180%) blur(20px)", WebkitBackdropFilter: "saturate(180%) blur(20px)", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "6px" }}>
+        <div className="flex items-center justify-around px-1">
           {([
             { id: "presensi" as TabType, label: "Presensi", icon: ClipboardList },
             { id: "wfh" as TabType, label: "WFH", icon: Activity },
@@ -635,16 +637,16 @@ export default function PresensiPage() {
             { id: "analisa" as TabType, label: "Analisa", icon: TrendingUp },
           ]).map((tab) => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`flex flex-col items-center gap-0.5 py-1.5 px-3 rounded-xl transition-all ${activeTab === tab.id ? "text-[#2997ff]" : "text-[#86868b]"}`}>
+              className="mobile-nav-btn flex flex-col items-center gap-0.5 py-1.5 px-3 rounded-xl">
               <tab.icon className={`w-5 h-5 ${activeTab === tab.id ? "text-[#2997ff]" : "text-[#86868b]"}`} />
-              <span className="text-[10px] font-medium">{tab.label}</span>
+              <span className={`text-[10px] font-medium ${activeTab === tab.id ? "text-[#2997ff]" : "text-[#86868b]"}`}>{tab.label}</span>
               {activeTab === tab.id && <div className="w-1 h-1 rounded-full bg-[#2997ff]" />}
             </button>
           ))}
         </div>
       </div>
 
-      <main className="flex-1 pb-20 md:pb-0" style={{ paddingTop: "80px" }}>
+      <main className="flex-1" style={{ paddingTop: "48px" }}>
         {/* Hero Section */}
         <section className="relative text-center px-4 sm:px-6 pb-6 sm:pb-10">
           <div className="hero-glow" />
@@ -774,7 +776,7 @@ export default function PresensiPage() {
                     </div>
 
                     {/* Photo Upload */}
-                    <div onClick={() => fileInputRef.current?.click()} className="relative border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 group" style={{ borderColor: "rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.02)" }}>
+                    <div onClick={() => fileInputRef.current?.click()} className="photo-upload-area relative border-2 border-dashed rounded-2xl p-4 sm:p-8 text-center cursor-pointer group" style={{ borderColor: "rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.02)" }}>
                       {photoData ? (
                         <div className="photo-preview-container mx-auto w-40 h-52 mb-3 relative">
                           <img src={photoData} alt="Preview" className="w-full h-full object-cover rounded-xl" />
@@ -784,7 +786,7 @@ export default function PresensiPage() {
                         </div>
                       ) : (
                         <div className="flex flex-col items-center gap-3">
-                          <div className="w-16 h-16 rounded-2xl flex items-center justify-center transition-all" style={{ background: "rgba(41, 151, 255, 0.08)" }}>
+                          <div className="photo-placeholder-icon w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "rgba(41, 151, 255, 0.08)" }}>
                             <Camera className="w-8 h-8" style={{ color: "#86868b" }} />
                           </div>
                           <p className="text-sm text-[#86868b]">Klik untuk ambil / Upload foto selfie</p>
@@ -914,7 +916,7 @@ export default function PresensiPage() {
                   <Filter className="w-4 h-4 text-[#86868b]" />
                   <span className="text-xs uppercase tracking-widest text-[#86868b] font-medium">Filter</span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 filter-grid">
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-[#86868b] mb-2 block font-medium">Tanggal</label>
                     <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="apple-input text-sm" />
