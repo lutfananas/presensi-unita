@@ -370,7 +370,7 @@ export default function PresensiPage() {
         setNamaLengkap(""); setUnitKerja(""); setPesan(""); setPhotoData(null); setGeoLocation(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
         fetchStats();
-      } else { toast({ title: "Gagal menyimpan", variant: "destructive" }); }
+      } else { toast({ title: json.error || "Gagal menyimpan", variant: "destructive" }); }
     } catch { toast({ title: "Terjadi kesalahan", variant: "destructive" }); }
     finally { setIsSubmitting(false); }
   };

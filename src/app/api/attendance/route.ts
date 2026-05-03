@@ -20,6 +20,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Cegah duplikat: cek apakah nama sudah absen dengan tipe yang sama hari ini (case-insensitive)
+    const now = new Date();
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(now);
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const todayRecords = await db.attendance.findMany({
+      where: {
+        createdAt: { gte: todayStart, lte: todayEnd },
+        type: type,
+      },
+    });
+
+    const inputName = namaLengkap.trim().toLowerCase();
+    const alreadyExists = todayRecords.some(
+      (r) => r.namaLengkap.toLowerCase() === inputName
+    );
+
+    if (alreadyExists) {
+      return NextResponse.json(
+        { error: `${namaLengkap.trim()} sudah absen ${type === 'HADIR' ? 'Hadir' : 'Pulang'} hari ini. Tidak bisa absen dua kali.` },
+        { status: 409 }
+      );
+    }
+
     const attendance = await db.attendance.create({
       data: {
         namaLengkap: namaLengkap.trim(),
