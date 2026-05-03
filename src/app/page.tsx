@@ -599,16 +599,22 @@ export default function PresensiPage() {
           {/* Center Nav Links (pill-shaped) */}
           <div className="flex items-center gap-1">
             {([
-              { id: "presensi" as TabType, label: "Presensi", icon: ClipboardList },
-              { id: "wfh" as TabType, label: "WFH", icon: Activity },
-              { id: "laporan" as TabType, label: "Laporan", icon: BarChart3 },
-              { id: "analisa" as TabType, label: "Analisa", icon: TrendingUp },
+              { id: "presensi" as TabType, label: "Presensi", desc: "Absensi Hadir & Pulang", icon: ClipboardList },
+              { id: "wfh" as TabType, label: "WFH", desc: "Aktivitas Kerja dari Rumah", icon: Activity },
+              { id: "laporan" as TabType, label: "Laporan", desc: "Rekap Data Absensi", icon: BarChart3 },
+              { id: "analisa" as TabType, label: "Analisa", desc: "Statistik & Insight", icon: TrendingUp },
             ]).map((tab) => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                className={`nav-link flex items-center gap-1.5 ${activeTab === tab.id ? "active" : ""}`}>
-                <tab.icon className="w-3.5 h-3.5" />
-                <span className="hidden md:inline">{tab.label}</span>
-              </button>
+              <div key={tab.id} className="relative group">
+                <button onClick={() => setActiveTab(tab.id)}
+                  className={`nav-link flex items-center gap-1.5 ${activeTab === tab.id ? "active" : ""}`}>
+                  <tab.icon className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                </button>
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 rounded-lg bg-[#1d1d1f] border border-white/10 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                  <p className="text-[11px] font-medium text-[#f5f5f7]">{tab.desc}</p>
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 bg-[#1d1d1f] border-l border-t border-white/10" />
+                </div>
+              </div>
             ))}
           </div>
 
