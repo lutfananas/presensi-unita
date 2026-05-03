@@ -25,6 +25,7 @@ import {
   X,
   Calendar,
   Filter,
+  Lock,
   FileText,
   TrendingUp,
   PieChart,
@@ -104,6 +105,13 @@ export default function PresensiPage() {
   const [activeTab, setActiveTab] = useState<TabType>("presensi");
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Password Protection State
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [pendingTab, setPendingTab] = useState<TabType | null>(null);
+  const [passwordError, setPasswordError] = useState(false);
 
   // Attendance Form State
   const [namaLengkap, setNamaLengkap] = useState("");
@@ -354,6 +362,40 @@ export default function PresensiPage() {
       img.src = result;
     };
     reader.readAsDataURL(file);
+  };
+
+  // ============ PASSWORD PROTECTION ============
+  const PROTECTED_TABS: TabType[] = ["laporan", "analisa"];
+  const ACCESS_PASSWORD = "muharsono";
+
+  const handleTabSwitch = (tabId: TabType) => {
+    if (PROTECTED_TABS.includes(tabId) && !isUnlocked) {
+      setPendingTab(tabId);
+      setShowPasswordModal(true);
+      setPasswordInput("");
+      setPasswordError(false);
+      return;
+    }
+    setActiveTab(tabId);
+  };
+
+  const handlePasswordSubmit = () => {
+    if (passwordInput === ACCESS_PASSWORD) {
+      setIsUnlocked(true);
+      setShowPasswordModal(false);
+      setPasswordInput("");
+      setPasswordError(false);
+      if (pendingTab) {
+        setActiveTab(pendingTab);
+        setPendingTab(null);
+      }
+    } else {
+      setPasswordError(true);
+    }
+  };
+
+  const handlePasswordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") handlePasswordSubmit();
   };
 
   // ============ SUBMIT HANDLERS ============
@@ -612,10 +654,11 @@ export default function PresensiPage() {
               { id: "analisa" as TabType, label: "Analisa", desc: "Statistik & Insight", icon: TrendingUp },
             ]).map((tab) => (
               <div key={tab.id} className="relative group">
-                <button onClick={() => setActiveTab(tab.id)}
+                <button onClick={() => handleTabSwitch(tab.id)}
                   className={`nav-link flex items-center gap-1.5 ${activeTab === tab.id ? "active" : ""}`}>
                   <tab.icon className="w-3.5 h-3.5" />
                   <span>{tab.label}</span>
+                  {PROTECTED_TABS.includes(tab.id) && !isUnlocked && <Lock className="w-3 h-3 text-[#ff9f0a]" />}
                 </button>
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 rounded-lg bg-[#1d1d1f] border border-white/10 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                   <p className="text-[11px] font-medium text-[#f5f5f7]">{tab.desc}</p>
@@ -641,7 +684,7 @@ export default function PresensiPage() {
             { id: "laporan" as TabType, label: "Laporan", icon: BarChart3 },
             { id: "analisa" as TabType, label: "Analisa", icon: TrendingUp },
           ]).map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+            <button key={tab.id} onClick={() => handleTabSwitch(tab.id)}
               className="mobile-nav-btn flex flex-col items-center gap-0.5 py-1.5 px-3 rounded-xl">
               <tab.icon className={`w-5 h-5 ${activeTab === tab.id ? "text-[#2997ff]" : "text-[#86868b]"}`} />
               <span className={`text-[10px] font-medium ${activeTab === tab.id ? "text-[#2997ff]" : "text-[#86868b]"}`}>{tab.label}</span>
@@ -1484,6 +1527,57 @@ export default function PresensiPage() {
               <X className="w-4 h-4 text-white" />
             </button>
             <img src={selectedPhoto} alt="Foto Presensi" className="w-full rounded-xl" />
+          </div>
+        </div>
+      )}
+
+      {/* ===== Password Modal ===== */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.85)" }} onClick={() => { setShowPasswordModal(false); setPasswordInput(""); setPasswordError(false); }}>
+          <div className="relative max-w-sm w-full rounded-2xl p-6 sm:p-8 animate-fade-in-up" style={{ background: "rgba(29,29,31,0.95)", border: "1px solid rgba(255,255,255,0.1)" }} onClick={(e) => e.stopPropagation()}>
+            {/* Close button */}
+            <button onClick={() => { setShowPasswordModal(false); setPasswordInput(""); setPasswordError(false); }} className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-colors" style={{ background: "rgba(255,255,255,0.08)" }}>
+              <X className="w-4 h-4 text-[#86868b]" />
+            </button>
+
+            {/* Lock icon */}
+            <div className="flex justify-center mb-5">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255, 159, 10, 0.12)" }}>
+                <Lock className="w-7 h-7" style={{ color: "#ff9f0a" }} />
+              </div>
+            </div>
+
+            {/* Title */}
+            <h3 className="text-lg font-bold text-[#f5f5f7] text-center mb-2">Menu Terkunci</h3>
+            <p className="text-xs text-[#86868b] text-center mb-6">
+              Menu <span className="text-[#f5f5f7] font-medium">{pendingTab === "laporan" ? "Laporan" : "Analisa"}</span> memerlukan password untuk mengakses
+            </p>
+
+            {/* Password input */}
+            <div className="mb-4">
+              <input
+                type="password"
+                value={passwordInput}
+                onChange={(e) => { setPasswordInput(e.target.value); setPasswordError(false); }}
+                onKeyDown={handlePasswordKeyDown}
+                placeholder="Masukkan password"
+                className="apple-input text-center"
+                autoFocus
+              />
+            </div>
+
+            {/* Error message */}
+            {passwordError && (
+              <p className="text-xs text-[#ff453a] text-center mb-4 animate-fade-in-up">
+                Password salah. Silakan coba lagi.
+              </p>
+            )}
+
+            {/* Submit button */}
+            <button onClick={handlePasswordSubmit} className="apple-btn apple-btn-blue w-full" style={{ background: "#ff9f0a" }}>
+              <Lock className="w-4 h-4" />
+              Buka Kunci
+            </button>
           </div>
         </div>
       )}
