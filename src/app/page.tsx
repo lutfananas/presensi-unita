@@ -583,38 +583,21 @@ export default function PresensiPage() {
 
   // ============ RENDER ============
   return (
-    <div className="min-h-screen relative flex flex-col">
-      {/* Parallax Background */}
-      <div className="parallax-bg">
-        <div className="particle" /><div className="particle" /><div className="particle" />
-        <div className="particle" /><div className="particle" /><div className="particle" />
-        <div className="particle" /><div className="particle" />
-      </div>
+    <div className="min-h-screen flex flex-col" style={{ background: "#000000" }}>
 
-      {/* Header */}
-      <header className="relative z-10 liquid-glass-static border-b border-white/5">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="relative w-14 h-14 rounded-xl overflow-hidden liquid-glass-static p-1 flex-shrink-0">
-                <Image src="/logo-universitas.png" alt="Logo Universitas Tulungagung" width={48} height={48} className="rounded-lg object-contain" />
-              </div>
-              <div>
-                <h1 className="text-xl md:text-2xl font-bold text-shimmer">Universitas Tulungagung</h1>
-                <p className="text-xs md:text-sm text-[#9fa8da]">Sistem Presensi Digital</p>
-              </div>
+      {/* ===== Fixed Navigation (Frosted Glass) ===== */}
+      <nav className="apple-nav">
+        <div className="max-w-[1200px] mx-auto px-6 h-12 flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 rounded-lg overflow-hidden flex-shrink-0">
+              <Image src="/logo-universitas.png" alt="Logo" width={28} height={28} className="rounded-lg object-contain" />
             </div>
-            <div className="hidden md:flex items-center gap-2 text-xs text-[#9fa8da]">
-              <div className="pulse-dot w-2 h-2 bg-green-400 rounded-full" /><span>Online</span>
-            </div>
+            <span className="text-sm font-semibold text-[#f5f5f7] tracking-tight hidden sm:inline">Universitas Tulungagung</span>
           </div>
-        </div>
-      </header>
 
-      {/* Navigation Tabs */}
-      <nav className="relative z-10 liquid-glass-static border-b border-white/5">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="flex gap-1 overflow-x-auto">
+          {/* Center Nav Links (pill-shaped) */}
+          <div className="flex items-center gap-1">
             {([
               { id: "presensi" as TabType, label: "Presensi", icon: ClipboardList },
               { id: "wfh" as TabType, label: "WFH", icon: Activity },
@@ -622,457 +605,831 @@ export default function PresensiPage() {
               { id: "analisa" as TabType, label: "Analisa", icon: TrendingUp },
             ]).map((tab) => (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 md:px-5 py-3.5 text-sm font-medium transition-all duration-300 relative whitespace-nowrap ${activeTab === tab.id ? "text-white tab-active" : "text-[#9fa8da] hover:text-white"}`}>
-                <tab.icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
+                className={`nav-link flex items-center gap-1.5 ${activeTab === tab.id ? "active" : ""}`}>
+                <tab.icon className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">{tab.label}</span>
               </button>
             ))}
+          </div>
+
+          {/* Right side: Online status */}
+          <div className="hidden md:flex items-center gap-2">
+            <div className="pulse-dot w-1.5 h-1.5 rounded-full" style={{ background: "#30d158" }} />
+            <span className="text-[10px] text-[#86868b]">Online</span>
           </div>
         </div>
       </nav>
 
-      {/* Main Content */}
-      <main className="relative z-10 max-w-6xl mx-auto px-4 py-6 pb-12 flex-1">
-        {/* Stats Dashboard */}
-        {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 animate-fade-in-up">
-            {[
-              { val: stats.today.hadir, label: "Hadir Hari Ini", icon: LogIn, color: "bg-green-500/20", iconColor: "text-green-400" },
-              { val: stats.today.pulang, label: "Pulang Hari Ini", icon: LogOut, color: "bg-red-500/20", iconColor: "text-red-400" },
-              { val: stats.today.uniquePeople, label: "Jumlah Hari Ini", icon: Users, color: "bg-blue-500/20", iconColor: "text-blue-400" },
-              { val: stats.totals.wfh, label: "Total WFH", icon: Activity, color: "bg-orange-500/20", iconColor: "text-orange-400" },
-            ].map((s, i) => (
-              <div key={i} className="stat-card liquid-glass rounded-2xl p-4">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl ${s.color} flex items-center justify-center`}>
-                    <s.icon className={`w-5 h-5 ${s.iconColor}`} />
+      {/* ===== Main Content ===== */}
+      <main className="flex-1" style={{ paddingTop: "100px" }}>
+
+        {/* ===== Hero Section ===== */}
+        <section className="relative text-center px-6 pb-10">
+          <div className="hero-glow" />
+          <div className="relative z-10 animate-fade-in-up">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-gradient-hero mb-4">
+              Universitas Tulungagung
+            </h1>
+            <p className="text-base md:text-lg text-[#86868b] max-w-xl mx-auto">
+              Sistem Presensi Digital
+            </p>
+          </div>
+        </section>
+
+        {/* ===== Content Wrapper ===== */}
+        <div className="apple-section-wide pb-20">
+
+          {/* ===== Stats Dashboard ===== */}
+          {stats && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12 animate-fade-in-up">
+              {[
+                { val: stats.today.hadir, label: "Hadir Hari Ini", icon: LogIn, color: "rgba(48, 209, 88, 0.12)", iconColor: "#30d158" },
+                { val: stats.today.pulang, label: "Pulang Hari Ini", icon: LogOut, color: "rgba(255, 69, 58, 0.12)", iconColor: "#ff453a" },
+                { val: stats.today.uniquePeople, label: "Jumlah Hari Ini", icon: Users, color: "rgba(41, 151, 255, 0.12)", iconColor: "#2997ff" },
+                { val: stats.totals.wfh, label: "Total WFH", icon: Activity, color: "rgba(255, 159, 10, 0.12)", iconColor: "#ff9f0a" },
+              ].map((s, i) => (
+                <div key={i} className={`stat-card-apple animate-fade-in-up animate-fade-in-up-d${i + 1}`}>
+                  <div className="flex items-center gap-4">
+                    <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: s.color }}>
+                      <s.icon className="w-5 h-5" style={{ color: s.iconColor }} />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-[#f5f5f7]">{s.val}</p>
+                      <p className="text-xs text-[#86868b] mt-0.5">{s.label}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ========== TAB: PRESENSI ========== */}
+          {activeTab === "presensi" && (
+            <div className="animate-fade-in-up space-y-8">
+
+              {/* Clock Display */}
+              <div className="apple-card p-8 text-center">
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <Clock className="w-4 h-4 text-[#86868b]" />
+                  <span className="text-xs uppercase tracking-widest text-[#86868b] font-medium">Waktu Lokal</span>
+                </div>
+                <p className="text-3xl md:text-4xl font-bold text-[#f5f5f7] font-mono tracking-wider">
+                  <ClockDisplay />
+                </p>
+              </div>
+
+              {/* Attendance Form */}
+              <div className="apple-card p-6 md:p-10">
+                <h2 className="text-2xl font-bold text-[#f5f5f7] mb-8 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(41, 151, 255, 0.12)" }}>
+                    <ClipboardList className="w-4.5 h-4.5 text-[#2997ff]" />
+                  </div>
+                  Form Presensi
+                </h2>
+                <div className="space-y-7">
+                  {/* Nama Lengkap */}
+                  <div>
+                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#86868b] font-medium mb-3">
+                      <User className="w-3.5 h-3.5" />
+                      Nama Lengkap <span style={{ color: "#ff453a" }}>*</span>
+                      <span className="normal-case tracking-normal text-[#86868b]/60 ml-1">(tanpa gelar)</span>
+                    </label>
+                    <input type="text" value={namaLengkap} onChange={(e) => setNamaLengkap(e.target.value)} placeholder="Masukkan nama lengkap tanpa gelar" className="apple-input" />
+                  </div>
+
+                  {/* Unit Kerja */}
+                  <div>
+                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#86868b] font-medium mb-3">
+                      <Building2 className="w-3.5 h-3.5" />
+                      Unit Kerja <span style={{ color: "#ff453a" }}>*</span>
+                    </label>
+                    <div className="relative">
+                      <select value={unitKerja} onChange={(e) => setUnitKerja(e.target.value)} className="apple-select">
+                        <option value="" style={{ background: "#1c1c1e", color: "#86868b" }}>-- Pilih Unit Kerja --</option>
+                        {UNIT_KERJA_LIST.map((unit) => (<option key={unit} value={unit} style={{ background: "#1c1c1e" }}>{unit}</option>))}
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868b] pointer-events-none" />
+                    </div>
+                  </div>
+
+                  {/* Pesan */}
+                  <div>
+                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#86868b] font-medium mb-3">
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      Pesan
+                      <span className="normal-case tracking-normal text-[#86868b]/60 ml-1">(opsional)</span>
+                    </label>
+                    <textarea value={pesan} onChange={(e) => setPesan(e.target.value)} placeholder="Contoh: Terlambat karena praktikum jam 12, izin pulang awal karena sakit, dll." rows={3} className="apple-textarea" />
+                  </div>
+
+                  {/* Photo / GeoTag */}
+                  <div>
+                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#86868b] font-medium mb-3">
+                      <Camera className="w-3.5 h-3.5" />
+                      Foto Selfie Geotag
+                    </label>
+
+                    {/* GeoTag Status */}
+                    <div className="mb-4">
+                      {geoLocation ? (
+                        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl" style={{ background: "rgba(48, 209, 88, 0.08)", border: "1px solid rgba(48, 209, 88, 0.2)" }}>
+                          <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: "#30d158" }} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium" style={{ color: "#30d158" }}>Lokasi aktif</p>
+                            <p className="text-xs text-[#86868b] truncate">{geoLocation.address}</p>
+                          </div>
+                          <button onClick={() => setGeoLocation(null)} className="text-[#86868b] hover:text-[#ff453a] transition-colors flex-shrink-0"><X className="w-3.5 h-3.5" /></button>
+                        </div>
+                      ) : (
+                        <button onClick={async () => { const loc = await requestGeoLocation(); if (loc) setGeoLocation(loc); }} disabled={isGettingLocation} className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-dashed w-full text-left transition-all" style={{ borderColor: "rgba(41, 151, 255, 0.3)" }}>
+                          {isGettingLocation ? <Loader2 className="w-4 h-4 animate-spin" style={{ color: "#2997ff" }} /> : <MapPin className="w-4 h-4" style={{ color: "#2997ff" }} />}
+                          <div className="flex-1">
+                            <p className="text-xs font-medium" style={{ color: "#2997ff" }}>{isGettingLocation ? "Mencari lokasi GPS..." : "Aktifkan Lokasi (GeoTag)"}</p>
+                            <p className="text-xs text-[#86868b]">{isGettingLocation ? "Mohon tunggu..." : "Foto akan dilengkapi timestamp & lokasi otomatis"}</p>
+                          </div>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Photo Upload */}
+                    <div onClick={() => fileInputRef.current?.click()} className="relative border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 group" style={{ borderColor: "rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.02)" }}>
+                      {photoData ? (
+                        <div className="photo-preview-container mx-auto w-40 h-52 mb-3 relative">
+                          <img src={photoData} alt="Preview" className="w-full h-full object-cover rounded-xl" />
+                          <div className="absolute bottom-0 left-0 right-0 text-center py-1.5 rounded-b-xl" style={{ background: "rgba(0,0,0,0.6)" }}>
+                            <p className="text-[10px] font-medium" style={{ color: "#30d158" }}>GeoTag Aktif</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="w-16 h-16 rounded-2xl flex items-center justify-center transition-all" style={{ background: "rgba(41, 151, 255, 0.08)" }}>
+                            <Camera className="w-8 h-8" style={{ color: "#86868b" }} />
+                          </div>
+                          <p className="text-sm text-[#86868b]">Klik untuk ambil / Upload foto selfie</p>
+                          <p className="text-xs text-[#86868b]/60">{geoLocation ? "Foto akan dilengkapi GeoTag (waktu & lokasi)" : "Aktifkan lokasi di atas untuk GeoTag"}</p>
+                        </div>
+                      )}
+                      {photoData && (
+                        <button onClick={(e) => { e.stopPropagation(); setPhotoData(null); if (fileInputRef.current) fileInputRef.current.value = ""; }} className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-colors z-10" style={{ background: "rgba(255, 69, 58, 0.8)" }}>
+                          <X className="w-4 h-4 text-white" />
+                        </button>
+                      )}
+                      <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoCapture} className="hidden" />
+                    </div>
+                  </div>
+
+                  {/* Submit Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                    <button onClick={() => handleSubmitAttendance("HADIR")} disabled={isSubmitting} className="apple-btn apple-btn-green w-full disabled:opacity-50 disabled:cursor-not-allowed">
+                      <LogIn className="w-4 h-4" />
+                      {isSubmitting ? "Menyimpan..." : "Absen Hadir"}
+                    </button>
+                    <button onClick={() => handleSubmitAttendance("PULANG")} disabled={isSubmitting} className="apple-btn apple-btn-red w-full disabled:opacity-50 disabled:cursor-not-allowed">
+                      <LogOut className="w-4 h-4" />
+                      {isSubmitting ? "Menyimpan..." : "Absen Pulang"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========== TAB: WFH ========== */}
+          {activeTab === "wfh" && (
+            <div className="animate-fade-in-up space-y-8">
+              <div className="apple-card p-6 md:p-10">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255, 159, 10, 0.12)" }}>
+                    <Activity className="w-5 h-5" style={{ color: "#ff9f0a" }} />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-white">{s.val}</p>
-                    <p className="text-xs text-[#9fa8da]">{s.label}</p>
+                    <h2 className="text-2xl font-bold text-[#f5f5f7]">Submit Aktivitas WFH</h2>
+                    <p className="text-xs text-[#86868b] mt-0.5">Catat aktivitas pekerjaan dari rumah Anda</p>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* ========== TAB: PRESENSI ========== */}
-        {activeTab === "presensi" && (
-          <div className="animate-fade-in-up">
-            <div className="liquid-glass rounded-2xl p-6 mb-6 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2"><Clock className="w-5 h-5 text-[#7986cb]" /><span className="text-sm text-[#9fa8da]">Waktu Lokal</span></div>
-              <p className="text-2xl md:text-3xl font-bold text-white font-mono tracking-wider"><ClockDisplay /></p>
-            </div>
-            <div className="liquid-glass rounded-2xl p-6 md:p-8">
-              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2"><ClipboardList className="w-5 h-5 text-[#7986cb]" />Form Presensi</h2>
-              <div className="space-y-5">
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-[#c5cae9] mb-2"><User className="w-4 h-4" />Nama Lengkap <span className="text-red-400">*</span><span className="text-xs text-[#7986cb] ml-1">(tanpa gelar)</span></label>
-                  <input type="text" value={namaLengkap} onChange={(e) => setNamaLengkap(e.target.value)} placeholder="Masukkan nama lengkap tanpa gelar" className="w-full px-4 py-3 rounded-xl liquid-glass-input text-white placeholder:text-[#5c6bc0]/50 text-sm" />
-                </div>
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-[#c5cae9] mb-2"><Building2 className="w-4 h-4" />Unit Kerja <span className="text-red-400">*</span></label>
-                  <div className="relative">
-                    <select value={unitKerja} onChange={(e) => setUnitKerja(e.target.value)} className="w-full px-4 py-3 rounded-xl liquid-glass-input text-white text-sm appearance-none cursor-pointer">
-                      <option value="" className="bg-[#0a0e27] text-[#9fa8da]">-- Pilih Unit Kerja --</option>
-                      {UNIT_KERJA_LIST.map((unit) => (<option key={unit} value={unit} className="bg-[#0a0e27]">{unit}</option>))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7986cb] pointer-events-none" />
+                <div className="space-y-7">
+                  <div>
+                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#86868b] font-medium mb-3">
+                      <User className="w-3.5 h-3.5" />
+                      Nama Lengkap <span style={{ color: "#ff453a" }}>*</span>
+                      <span className="normal-case tracking-normal text-[#86868b]/60 ml-1">(tanpa gelar)</span>
+                    </label>
+                    <input type="text" value={wfhNama} onChange={(e) => setWfhNama(e.target.value)} placeholder="Masukkan nama lengkap tanpa gelar" className="apple-input" />
                   </div>
-                </div>
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-[#c5cae9] mb-2"><MessageSquare className="w-4 h-4" />Pesan <span className="text-xs text-[#7986cb] ml-1">(opsional)</span></label>
-                  <textarea value={pesan} onChange={(e) => setPesan(e.target.value)} placeholder="Contoh: Terlambat karena praktikum jam 12, izin pulang awal karena sakit, dll." rows={3} className="w-full px-4 py-3 rounded-xl liquid-glass-input text-white placeholder:text-[#5c6bc0]/50 text-sm resize-none" />
-                </div>
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-[#c5cae9] mb-2"><Camera className="w-4 h-4" />Foto Selfie Geotag</label>
-                  {/* GeoTag Status & Button */}
-                  <div className="mb-3">
-                    {geoLocation ? (
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/30">
-                        <MapPin className="w-4 h-4 text-green-400 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-green-400">Lokasi aktif</p>
-                          <p className="text-xs text-[#9fa8da] truncate">{geoLocation.address}</p>
-                        </div>
-                        <button onClick={() => setGeoLocation(null)} className="text-[#5c6bc0] hover:text-red-400 transition-colors flex-shrink-0"><X className="w-3.5 h-3.5" /></button>
-                      </div>
-                    ) : (
-                      <button onClick={async () => { const loc = await requestGeoLocation(); if (loc) setGeoLocation(loc); }} disabled={isGettingLocation} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-[#42a5f5]/40 hover:border-[#42a5f5]/60 hover:bg-[#1a237e]/20 transition-all w-full text-left">
-                        {isGettingLocation ? <Loader2 className="w-4 h-4 text-[#42a5f5] animate-spin" /> : <MapPin className="w-4 h-4 text-[#42a5f5]" />}
-                        <div className="flex-1">
-                          <p className="text-xs font-medium text-[#64b5f6]">{isGettingLocation ? "Mencari lokasi GPS..." : "Aktifkan Lokasi (GeoTag)"}</p>
-                          <p className="text-xs text-[#5c6bc0]">{isGettingLocation ? "Mohon tunggu..." : "Foto akan dilengkapi timestamp & lokasi otomatis"}</p>
-                        </div>
-                      </button>
-                    )}
-                  </div>
-                  <div onClick={() => fileInputRef.current?.click()} className="relative border-2 border-dashed border-[#3f51b5]/40 rounded-xl p-6 text-center cursor-pointer hover:border-[#5c6bc0]/60 transition-all duration-300 hover:bg-[#1a237e]/20 group">
-                    {photoData ? (
-                      <div className="photo-preview-container mx-auto w-40 h-52 mb-3 relative"><img src={photoData} alt="Preview" className="w-full h-full object-cover rounded-xl" /><div className="absolute bottom-0 left-0 right-0 bg-black/50 text-center py-1 rounded-b-xl"><p className="text-[10px] text-green-400 font-medium">📷 GeoTag Aktif</p></div></div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="w-16 h-16 rounded-full bg-[#1a237e]/40 flex items-center justify-center group-hover:bg-[#1a237e]/60 transition-all"><Camera className="w-8 h-8 text-[#7986cb]" /></div>
-                        <p className="text-sm text-[#9fa8da]">Klik untuk ambil/Upload foto selfie</p>
-                        <p className="text-xs text-[#5c6bc0]">{geoLocation ? "Foto akan dilengkapi GeoTag (waktu & lokasi)" : "Aktifkan lokasi di atas untuk GeoTag"}</p>
-                      </div>
-                    )}
-                    {photoData && (<button onClick={(e) => { e.stopPropagation(); setPhotoData(null); if (fileInputRef.current) fileInputRef.current.value = ""; }} className="absolute top-2 right-2 w-7 h-7 rounded-full bg-red-500/80 flex items-center justify-center hover:bg-red-500 transition-colors z-10"><X className="w-4 h-4 text-white" /></button>)}
-                    <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoCapture} className="hidden" />
-                  </div>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                  <button onClick={() => handleSubmitAttendance("HADIR")} disabled={isSubmitting} className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-xl btn-glow btn-glow-hadir text-white font-semibold text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed"><LogIn className="w-5 h-5" />{isSubmitting ? "Menyimpan..." : "Absen Hadir"}</button>
-                  <button onClick={() => handleSubmitAttendance("PULANG")} disabled={isSubmitting} className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-xl btn-glow btn-glow-pulang text-white font-semibold text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed"><LogOut className="w-5 h-5" />{isSubmitting ? "Menyimpan..." : "Absen Pulang"}</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ========== TAB: WFH ========== */}
-        {activeTab === "wfh" && (
-          <div className="animate-fade-in-up">
-            <div className="liquid-glass rounded-2xl p-6 md:p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center"><Activity className="w-5 h-5 text-orange-400" /></div>
-                <div><h2 className="text-xl font-bold text-white">Submit Aktivitas WFH</h2><p className="text-xs text-[#9fa8da]">Catat aktivitas pekerjaan dari rumah Anda</p></div>
-              </div>
-              <div className="space-y-5">
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-[#c5cae9] mb-2"><User className="w-4 h-4" />Nama Lengkap <span className="text-red-400">*</span><span className="text-xs text-[#7986cb] ml-1">(tanpa gelar)</span></label>
-                  <input type="text" value={wfhNama} onChange={(e) => setWfhNama(e.target.value)} placeholder="Masukkan nama lengkap tanpa gelar" className="w-full px-4 py-3 rounded-xl liquid-glass-input text-white placeholder:text-[#5c6bc0]/50 text-sm" />
-                </div>
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-[#c5cae9] mb-2"><Building2 className="w-4 h-4" />Unit Kerja <span className="text-red-400">*</span></label>
-                  <div className="relative">
-                    <select value={wfhUnit} onChange={(e) => setWfhUnit(e.target.value)} className="w-full px-4 py-3 rounded-xl liquid-glass-input text-white text-sm appearance-none cursor-pointer">
-                      <option value="" className="bg-[#0a0e27] text-[#9fa8da]">-- Pilih Unit Kerja --</option>
-                      {UNIT_KERJA_LIST.map((unit) => (<option key={unit} value={unit} className="bg-[#0a0e27]">{unit}</option>))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7986cb] pointer-events-none" />
-                  </div>
-                </div>
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-[#c5cae9] mb-2"><ClipboardList className="w-4 h-4" />Deskripsi Pekerjaan <span className="text-red-400">*</span></label>
-                  <textarea value={wfhDeskripsi} onChange={(e) => setWfhDeskripsi(e.target.value)} placeholder="Jelaskan aktivitas pekerjaan yang Anda lakukan saat WFH..." rows={5} className="w-full px-4 py-3 rounded-xl liquid-glass-input text-white placeholder:text-[#5c6bc0]/50 text-sm resize-none" />
-                </div>
-                <button onClick={handleSubmitWFH} disabled={isSubmittingWfh} className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl btn-glow btn-glow-wfh text-white font-semibold text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed"><Send className="w-5 h-5" />{isSubmittingWfh ? "Menyimpan..." : "Submit Aktivitas WFH"}</button>
-              </div>
-            </div>
-            {stats && stats.recent.wfh.length > 0 && (
-              <div className="liquid-glass rounded-2xl p-6 mt-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2"><Clock className="w-4 h-4 text-[#7986cb]" />Aktivitas WFH Terbaru</h3>
-                <div className="space-y-3">
-                  {stats.recent.wfh.map((item) => (
-                    <div key={item.id} className="p-3 rounded-xl bg-[#0a0e27]/40 border border-white/5">
-                      <div className="flex items-center justify-between mb-1"><span className="font-medium text-white text-sm">{item.namaLengkap}</span><span className="text-xs text-[#7986cb]">{item.unitKerja}</span></div>
-                      <p className="text-xs text-[#9fa8da] line-clamp-2">{item.deskripsiPekerjaan}</p>
-                      <p className="text-xs text-[#5c6bc0] mt-1">{formatDateTime(item.createdAt)}</p>
+                  <div>
+                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#86868b] font-medium mb-3">
+                      <Building2 className="w-3.5 h-3.5" />
+                      Unit Kerja <span style={{ color: "#ff453a" }}>*</span>
+                    </label>
+                    <div className="relative">
+                      <select value={wfhUnit} onChange={(e) => setWfhUnit(e.target.value)} className="apple-select">
+                        <option value="" style={{ background: "#1c1c1e", color: "#86868b" }}>-- Pilih Unit Kerja --</option>
+                        {UNIT_KERJA_LIST.map((unit) => (<option key={unit} value={unit} style={{ background: "#1c1c1e" }}>{unit}</option>))}
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868b] pointer-events-none" />
                     </div>
-                  ))}
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#86868b] font-medium mb-3">
+                      <ClipboardList className="w-3.5 h-3.5" />
+                      Deskripsi Pekerjaan <span style={{ color: "#ff453a" }}>*</span>
+                    </label>
+                    <textarea value={wfhDeskripsi} onChange={(e) => setWfhDeskripsi(e.target.value)} placeholder="Jelaskan aktivitas pekerjaan yang Anda lakukan saat WFH..." rows={5} className="apple-textarea" />
+                  </div>
+                  <button onClick={handleSubmitWFH} disabled={isSubmittingWfh} className="apple-btn apple-btn-orange w-full disabled:opacity-50 disabled:cursor-not-allowed">
+                    <Send className="w-4 h-4" />
+                    {isSubmittingWfh ? "Menyimpan..." : "Submit Aktivitas WFH"}
+                  </button>
                 </div>
               </div>
-            )}
-          </div>
-        )}
 
-        {/* ========== TAB: LAPORAN ========== */}
-        {activeTab === "laporan" && (
-          <div className="animate-fade-in-up">
-            <div className="liquid-glass rounded-2xl p-1 mb-4 inline-flex gap-1">
-              <button onClick={() => setReportTab("presensi")} className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${reportTab === "presensi" ? "bg-[#1a237e]/80 text-white" : "text-[#9fa8da] hover:text-white"}`}><span className="flex items-center gap-2"><ClipboardList className="w-4 h-4" />Presensi</span></button>
-              <button onClick={() => setReportTab("wfh")} className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${reportTab === "wfh" ? "bg-[#e65100]/40 text-white" : "text-[#9fa8da] hover:text-white"}`}><span className="flex items-center gap-2"><Activity className="w-4 h-4" />WFH</span></button>
-            </div>
-            <div className="liquid-glass rounded-2xl p-4 mb-4">
-              <div className="flex items-center gap-2 mb-3"><Filter className="w-4 h-4 text-[#7986cb]" /><span className="text-sm font-medium text-[#c5cae9]">Filter</span></div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                <div><label className="text-xs text-[#9fa8da] mb-1 block">Tanggal</label><input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="w-full px-3 py-2.5 rounded-lg liquid-glass-input text-white text-sm" /></div>
-                <div><label className="text-xs text-[#9fa8da] mb-1 block">Unit Kerja</label><div className="relative"><select value={filterUnit} onChange={(e) => setFilterUnit(e.target.value)} className="w-full px-3 py-2.5 rounded-lg liquid-glass-input text-white text-sm appearance-none cursor-pointer"><option value="SEMUA" className="bg-[#0a0e27]">Semua Unit</option>{UNIT_KERJA_LIST.map((u) => (<option key={u} value={u} className="bg-[#0a0e27]">{u}</option>))}</select><ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#7986cb] pointer-events-none" /></div></div>
-                {reportTab === "presensi" && (<div><label className="text-xs text-[#9fa8da] mb-1 block">Tipe</label><div className="relative"><select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="w-full px-3 py-2.5 rounded-lg liquid-glass-input text-white text-sm appearance-none cursor-pointer"><option value="SEMUA" className="bg-[#0a0e27]">Semua Tipe</option><option value="HADIR" className="bg-[#0a0e27]">Hadir</option><option value="PULANG" className="bg-[#0a0e27]">Pulang</option></select><ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#7986cb] pointer-events-none" /></div></div>)}
-                <div><label className="text-xs text-[#9fa8da] mb-1 block">Cari Nama</label><div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#7986cb]" /><input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Cari nama..." className="w-full pl-9 pr-3 py-2.5 rounded-lg liquid-glass-input text-white text-sm placeholder:text-[#5c6bc0]/50" /></div></div>
-              </div>
-            </div>
-            <div className="flex items-center justify-between mb-3 px-1">
-              <p className="text-xs text-[#9fa8da]">{reportTab === "presensi" ? `Menampilkan ${attendanceData.length} data absensi` : `Menampilkan ${wfhData.length} data WFH`}</p>
-              <button onClick={handleExportCSV} className="flex items-center gap-1.5 text-xs text-[#7986cb] hover:text-white transition-colors px-3 py-1.5 rounded-lg bg-[#1a237e]/40 hover:bg-[#1a237e]/60"><Download className="w-3.5 h-3.5" />Export CSV</button>
-            </div>
-            {reportTab === "presensi" && (
-              <div className="liquid-glass rounded-2xl overflow-hidden">
-                {isLoadingData ? (<div className="p-12 text-center text-[#9fa8da]"><div className="animate-spin w-8 h-8 border-2 border-[#3f51b5] border-t-transparent rounded-full mx-auto mb-3" /><p className="text-sm">Memuat data...</p></div>) : attendanceData.length === 0 ? (<div className="p-12 text-center text-[#9fa8da]"><ClipboardList className="w-12 h-12 mx-auto mb-3 opacity-30" /><p className="text-sm">Belum ada data absensi</p></div>) : (
-                  <div className="overflow-x-auto custom-scrollbar max-h-[70vh] overflow-y-auto">
-                    <table className="w-full data-table text-sm">
-                      <thead><tr className="text-left text-xs uppercase tracking-wider text-[#9fa8da]"><th className="px-4 py-3 font-medium">Waktu</th><th className="px-4 py-3 font-medium">Nama</th><th className="px-4 py-3 font-medium hidden md:table-cell">Unit Kerja</th><th className="px-4 py-3 font-medium">Tipe</th><th className="px-4 py-3 font-medium hidden lg:table-cell">Pesan</th><th className="px-4 py-3 font-medium hidden xl:table-cell">Lokasi</th><th className="px-4 py-3 font-medium text-center">Foto</th><th className="px-4 py-3 font-medium text-center">Aksi</th></tr></thead>
-                      <tbody className="divide-y divide-white/5">{attendanceData.map((r) => (
-                        <tr key={r.id} className="text-[#c5cae9]">
-                          <td className="px-4 py-3 whitespace-nowrap text-xs">{formatDateTime(r.createdAt)}</td>
-                          <td className="px-4 py-3 font-medium text-white text-sm">{r.namaLengkap}</td>
-                          <td className="px-4 py-3 hidden md:table-cell text-xs">{r.unitKerja}</td>
-                          <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${r.type === "HADIR" ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}>{r.type === "HADIR" ? <LogIn className="w-3 h-3" /> : <LogOut className="w-3 h-3" />}{r.type}</span></td>
-                          <td className="px-4 py-3 hidden lg:table-cell max-w-[200px]"><span className="text-xs text-[#9fa8da] line-clamp-2">{r.pesan || "-"}</span></td>
-                          <td className="px-4 py-3 hidden xl:table-cell">{r.locationAddress ? (<span className="text-xs text-[#64b5f6] flex items-center gap-1"><MapPin className="w-3 h-3 flex-shrink-0" /><span className="truncate max-w-[150px]">{r.locationAddress.split(',')[0]}</span></span>) : (<span className="text-xs text-[#5c6bc0]/50">-</span>)}</td>
-                          <td className="px-4 py-3 text-center">{r.photoData ? (<button onClick={() => setSelectedPhoto(r.photoData)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[#1a237e]/40 hover:bg-[#1a237e]/60 transition-colors"><Eye className="w-4 h-4 text-[#7986cb]" /></button>) : (<span className="text-xs text-[#5c6bc0]/50">-</span>)}</td>
-                          <td className="px-4 py-3 text-center"><button onClick={() => handleDeleteRecord(r.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-colors"><Trash2 className="w-4 h-4 text-red-400" /></button></td>
-                        </tr>
-                      ))}</tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            )}
-            {reportTab === "wfh" && (
-              <div className="liquid-glass rounded-2xl overflow-hidden">
-                {isLoadingData ? (<div className="p-12 text-center text-[#9fa8da]"><div className="animate-spin w-8 h-8 border-2 border-[#f57c00] border-t-transparent rounded-full mx-auto mb-3" /><p className="text-sm">Memuat data...</p></div>) : wfhData.length === 0 ? (<div className="p-12 text-center text-[#9fa8da]"><Activity className="w-12 h-12 mx-auto mb-3 opacity-30" /><p className="text-sm">Belum ada data WFH</p></div>) : (
-                  <div className="overflow-x-auto custom-scrollbar max-h-[70vh] overflow-y-auto">
-                    <table className="w-full data-table text-sm">
-                      <thead><tr className="text-left text-xs uppercase tracking-wider text-[#9fa8da]"><th className="px-4 py-3 font-medium">Waktu</th><th className="px-4 py-3 font-medium">Nama</th><th className="px-4 py-3 font-medium hidden md:table-cell">Unit Kerja</th><th className="px-4 py-3 font-medium">Deskripsi</th></tr></thead>
-                      <tbody className="divide-y divide-white/5">{wfhData.map((r) => (<tr key={r.id} className="text-[#c5cae9]"><td className="px-4 py-3 whitespace-nowrap text-xs">{formatDateTime(r.createdAt)}</td><td className="px-4 py-3 font-medium text-white text-sm">{r.namaLengkap}</td><td className="px-4 py-3 hidden md:table-cell text-xs">{r.unitKerja}</td><td className="px-4 py-3 max-w-[300px]"><span className="text-xs text-[#9fa8da]">{r.deskripsiPekerjaan}</span></td></tr>))}</tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ========== TAB: ANALISA ========== */}
-        {activeTab === "analisa" && (
-          <div className="animate-fade-in-up">
-            {/* Period & Filter */}
-            <div className="liquid-glass rounded-2xl p-4 mb-4">
-              <div className="flex items-center gap-2 mb-3"><TrendingUp className="w-4 h-4 text-[#7986cb]" /><span className="text-sm font-medium text-[#c5cae9]">Analisa Kehadiran</span></div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-[#9fa8da] mb-1 block">Periode</label>
-                  <div className="liquid-glass rounded-xl p-1 inline-flex gap-1">
-                    {([["daily", "Harian"], ["weekly", "Mingguan"], ["monthly", "Bulanan"]] as [AnalisaPeriod, string][]).map(([val, lbl]) => (
-                      <button key={val} onClick={() => setAnalisaPeriod(val)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${analisaPeriod === val ? "bg-[#3f51b5] text-white" : "text-[#9fa8da] hover:text-white"}`}>{lbl}</button>
+              {/* Recent WFH */}
+              {stats && stats.recent.wfh.length > 0 && (
+                <div className="apple-card p-6 md:p-8">
+                  <h3 className="text-lg font-semibold text-[#f5f5f7] mb-6 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-[#86868b]" />
+                    Aktivitas WFH Terbaru
+                  </h3>
+                  <div className="space-y-3">
+                    {stats.recent.wfh.map((item) => (
+                      <div key={item.id} className="p-4 rounded-2xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-[#f5f5f7] text-sm">{item.namaLengkap}</span>
+                          <span className="text-xs text-[#86868b]">{item.unitKerja}</span>
+                        </div>
+                        <p className="text-xs text-[#86868b] line-clamp-2">{item.deskripsiPekerjaan}</p>
+                        <p className="text-xs text-[#86868b]/60 mt-2">{formatDateTime(item.createdAt)}</p>
+                      </div>
                     ))}
                   </div>
                 </div>
-                <div>
-                  <label className="text-xs text-[#9fa8da] mb-1 block">Unit Kerja</label>
-                  <div className="relative">
-                    <select value={analisaUnit} onChange={(e) => setAnalisaUnit(e.target.value)} className="w-full px-3 py-2.5 rounded-lg liquid-glass-input text-white text-sm appearance-none cursor-pointer">
-                      <option value="SEMUA" className="bg-[#0a0e27]">Semua Unit</option>
-                      {UNIT_KERJA_LIST.map((u) => (<option key={u} value={u} className="bg-[#0a0e27]">{u}</option>))}
-                    </select>
-                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#7986cb] pointer-events-none" />
-                  </div>
-                </div>
-              </div>
-              {analysisData && (
-                <p className="text-xs text-[#5c6bc0] mt-2"><Calendar className="w-3 h-3 inline mr-1" />{analysisData.periodLabel}</p>
               )}
             </div>
+          )}
 
-            {/* Export PDF */}
-            <div className="flex items-center justify-between mb-4 px-1">
-              <div className="liquid-glass rounded-2xl p-1 inline-flex gap-1">
-                {([["ringkasan", "Ringkasan", PieChart], ["unit", "Per Unit", Building2], ["personal", "Per Orang", Users]] as [string, string, React.ElementType][]).map(([val, lbl, Ic]) => (
-                  <button key={val} onClick={() => setAnalisaSubTab(val as typeof analisaSubTab)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 ${analisaSubTab === val ? "bg-[#1a237e]/80 text-white" : "text-[#9fa8da] hover:text-white"}`}><Ic className="w-3.5 h-3.5" />{lbl}</button>
-                ))}
+          {/* ========== TAB: LAPORAN ========== */}
+          {activeTab === "laporan" && (
+            <div className="animate-fade-in-up space-y-6">
+
+              {/* Sub-tab toggle: Presensi / WFH */}
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="pill-toggle">
+                  <button onClick={() => setReportTab("presensi")} className={`pill-toggle-item flex items-center gap-2 ${reportTab === "presensi" ? "active" : ""}`}>
+                    <ClipboardList className="w-3.5 h-3.5" />Presensi
+                  </button>
+                  <button onClick={() => setReportTab("wfh")} className={`pill-toggle-item flex items-center gap-2 ${reportTab === "wfh" ? "active" : ""}`}>
+                    <Activity className="w-3.5 h-3.5" />WFH
+                  </button>
+                </div>
+                <button onClick={handleExportCSV} className="apple-btn apple-btn-secondary text-xs">
+                  <Download className="w-3.5 h-3.5" />Export CSV
+                </button>
               </div>
-              <button onClick={exportAnalysisPDF} disabled={!analysisData} className="flex items-center gap-1.5 text-xs text-[#7986cb] hover:text-white transition-colors px-3 py-1.5 rounded-lg bg-[#1a237e]/40 hover:bg-[#1a237e]/60 disabled:opacity-50"><FileText className="w-3.5 h-3.5" />Export PDF</button>
+
+              {/* Filter Card */}
+              <div className="apple-card p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Filter className="w-4 h-4 text-[#86868b]" />
+                  <span className="text-xs uppercase tracking-widest text-[#86868b] font-medium">Filter</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-[#86868b] mb-2 block font-medium">Tanggal</label>
+                    <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="apple-input text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-[#86868b] mb-2 block font-medium">Unit Kerja</label>
+                    <div className="relative">
+                      <select value={filterUnit} onChange={(e) => setFilterUnit(e.target.value)} className="apple-select text-sm">
+                        <option value="SEMUA" style={{ background: "#1c1c1e" }}>Semua Unit</option>
+                        {UNIT_KERJA_LIST.map((u) => (<option key={u} value={u} style={{ background: "#1c1c1e" }}>{u}</option>))}
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#86868b] pointer-events-none" />
+                    </div>
+                  </div>
+                  {reportTab === "presensi" && (
+                    <div>
+                      <label className="text-[10px] uppercase tracking-widest text-[#86868b] mb-2 block font-medium">Tipe</label>
+                      <div className="relative">
+                        <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="apple-select text-sm">
+                          <option value="SEMUA" style={{ background: "#1c1c1e" }}>Semua Tipe</option>
+                          <option value="HADIR" style={{ background: "#1c1c1e" }}>Hadir</option>
+                          <option value="PULANG" style={{ background: "#1c1c1e" }}>Pulang</option>
+                        </select>
+                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#86868b] pointer-events-none" />
+                      </div>
+                    </div>
+                  )}
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-[#86868b] mb-2 block font-medium">Cari Nama</label>
+                    <div className="relative">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#86868b]" />
+                      <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Cari nama..." className="apple-input text-sm" style={{ paddingLeft: "36px" }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Results count */}
+              <p className="text-xs text-[#86868b] px-2">
+                {reportTab === "presensi" ? `Menampilkan ${attendanceData.length} data absensi` : `Menampilkan ${wfhData.length} data WFH`}
+              </p>
+
+              {/* Presensi Table */}
+              {reportTab === "presensi" && (
+                <div className="apple-card overflow-hidden rounded-2xl">
+                  {isLoadingData ? (
+                    <div className="p-16 text-center text-[#86868b]">
+                      <div className="animate-spin w-8 h-8 border-2 rounded-full mx-auto mb-4" style={{ borderColor: "rgba(41,151,255,0.3)", borderTopColor: "#2997ff" }} />
+                      <p className="text-sm">Memuat data...</p>
+                    </div>
+                  ) : attendanceData.length === 0 ? (
+                    <div className="p-16 text-center text-[#86868b]">
+                      <ClipboardList className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                      <p className="text-sm">Belum ada data absensi</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto custom-scrollbar max-h-[70vh] overflow-y-auto">
+                      <table className="data-table text-sm">
+                        <thead>
+                          <tr>
+                            <th>Waktu</th>
+                            <th>Nama</th>
+                            <th className="hidden md:table-cell">Unit Kerja</th>
+                            <th>Tipe</th>
+                            <th className="hidden lg:table-cell">Pesan</th>
+                            <th className="hidden xl:table-cell">Lokasi</th>
+                            <th className="text-center">Foto</th>
+                            <th className="text-center">Aksi</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {attendanceData.map((r) => (
+                            <tr key={r.id}>
+                              <td className="whitespace-nowrap text-xs">{formatDateTime(r.createdAt)}</td>
+                              <td className="font-medium text-[#f5f5f7] text-sm">{r.namaLengkap}</td>
+                              <td className="hidden md:table-cell text-xs">{r.unitKerja}</td>
+                              <td>
+                                <span className={`apple-badge ${r.type === "HADIR" ? "bg-[#30d158]/15 text-[#30d158]" : "bg-[#ff453a]/15 text-[#ff453a]"}`}>
+                                  {r.type === "HADIR" ? <LogIn className="w-3 h-3 mr-1" /> : <LogOut className="w-3 h-3 mr-1" />}{r.type}
+                                </span>
+                              </td>
+                              <td className="hidden lg:table-cell max-w-[200px]"><span className="text-xs text-[#86868b] line-clamp-2">{r.pesan || "-"}</span></td>
+                              <td className="hidden xl:table-cell">
+                                {r.locationAddress ? (
+                                  <span className="text-xs flex items-center gap-1" style={{ color: "#2997ff" }}>
+                                    <MapPin className="w-3 h-3 flex-shrink-0" />
+                                    <span className="truncate max-w-[150px]">{r.locationAddress.split(',')[0]}</span>
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-[#86868b]/40">-</span>
+                                )}
+                              </td>
+                              <td className="text-center">
+                                {r.photoData ? (
+                                  <button onClick={() => setSelectedPhoto(r.photoData)} className="inline-flex items-center justify-center w-8 h-8 rounded-xl transition-colors" style={{ background: "rgba(41,151,255,0.1)" }}>
+                                    <Eye className="w-4 h-4" style={{ color: "#2997ff" }} />
+                                  </button>
+                                ) : (
+                                  <span className="text-xs text-[#86868b]/40">-</span>
+                                )}
+                              </td>
+                              <td className="text-center">
+                                <button onClick={() => handleDeleteRecord(r.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-xl transition-colors" style={{ background: "rgba(255, 69, 58, 0.1)" }}>
+                                  <Trash2 className="w-4 h-4" style={{ color: "#ff453a" }} />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* WFH Table */}
+              {reportTab === "wfh" && (
+                <div className="apple-card overflow-hidden rounded-2xl">
+                  {isLoadingData ? (
+                    <div className="p-16 text-center text-[#86868b]">
+                      <div className="animate-spin w-8 h-8 border-2 rounded-full mx-auto mb-4" style={{ borderColor: "rgba(255,159,10,0.3)", borderTopColor: "#ff9f0a" }} />
+                      <p className="text-sm">Memuat data...</p>
+                    </div>
+                  ) : wfhData.length === 0 ? (
+                    <div className="p-16 text-center text-[#86868b]">
+                      <Activity className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                      <p className="text-sm">Belum ada data WFH</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto custom-scrollbar max-h-[70vh] overflow-y-auto">
+                      <table className="data-table text-sm">
+                        <thead>
+                          <tr>
+                            <th>Waktu</th>
+                            <th>Nama</th>
+                            <th className="hidden md:table-cell">Unit Kerja</th>
+                            <th>Deskripsi</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {wfhData.map((r) => (
+                            <tr key={r.id}>
+                              <td className="whitespace-nowrap text-xs">{formatDateTime(r.createdAt)}</td>
+                              <td className="font-medium text-[#f5f5f7] text-sm">{r.namaLengkap}</td>
+                              <td className="hidden md:table-cell text-xs">{r.unitKerja}</td>
+                              <td className="max-w-[300px]"><span className="text-xs text-[#86868b]">{r.deskripsiPekerjaan}</span></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+          )}
 
-            {isLoadingAnalysis ? (
-              <div className="p-16 text-center text-[#9fa8da]"><div className="animate-spin w-10 h-10 border-2 border-[#3f51b5] border-t-transparent rounded-full mx-auto mb-4" /><p className="text-sm">Memuat data analisa...</p></div>
-            ) : !analysisData ? (
-              <div className="p-16 text-center text-[#9fa8da]"><TrendingUp className="w-16 h-16 mx-auto mb-4 opacity-20" /><p className="text-sm">Belum ada data analisa</p></div>
-            ) : (
-              <>
-                {/* Aturan Kehadiran Info */}
-                <div className="liquid-glass rounded-2xl p-4 mb-6 border-l-4 border-[#42a5f5]">
-                  <h3 className="text-sm font-semibold text-[#64b5f6] mb-3 flex items-center gap-2"><FileText className="w-4 h-4" />Aturan Kehadiran</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="bg-[#0a0e27]/50 rounded-xl p-3">
-                      <p className="text-xs font-semibold text-[#64b5f6] mb-1">Jam Kerja</p>
-                      <p className="text-xs text-[#c5cae9]">08:00 - 14:00 WIB (6 jam)</p>
-                    </div>
-                    <div className="bg-[#0a0e27]/50 rounded-xl p-3">
-                      <p className="text-xs font-semibold text-red-400 mb-1">Terlambat</p>
-                      <p className="text-xs text-[#c5cae9]">Absen hadir setelah pukul 08:00. Pegawai terlambat tidak mendapatkan hak lembur.</p>
-                    </div>
-                    <div className="bg-[#0a0e27]/50 rounded-xl p-3">
-                      <p className="text-xs font-semibold text-amber-400 mb-1">Lembur</p>
-                      <p className="text-xs text-[#c5cae9]">Hanya pegawai yang hadir sebelum/tepat 08:00. Pulang 14:00-14:59 belum lembur. Pulang mulai 15:00 = lembur 1 jam.</p>
-                    </div>
-                  </div>
+          {/* ========== TAB: ANALISA ========== */}
+          {activeTab === "analisa" && (
+            <div className="animate-fade-in-up space-y-6">
+
+              {/* Period & Filter */}
+              <div className="apple-card p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <TrendingUp className="w-4 h-4 text-[#86868b]" />
+                  <span className="text-xs uppercase tracking-widest text-[#86868b] font-medium">Analisa Kehadiran</span>
                 </div>
-
-                {/* Insight Pimpinan */}
-                {analysisData.insights && analysisData.insights.length > 0 && (
-                  <div className="liquid-glass rounded-2xl p-5 mb-6 border-l-4 border-[#7c4dff]">
-                    <h3 className="text-sm font-semibold text-[#b388ff] mb-3 flex items-center gap-2"><TrendingUp className="w-4 h-4" />Insight untuk Pimpinan</h3>
-                    <ul className="space-y-2">
-                      {analysisData.insights.map((insight, i) => (
-                        <li key={i} className="text-xs text-[#c5cae9] flex gap-2"><span className="text-[#7c4dff] font-bold mt-px">&#9679;</span><span>{insight}</span></li>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-[#86868b] mb-3 block font-medium">Periode</label>
+                    <div className="pill-toggle">
+                      {([["daily", "Harian"], ["weekly", "Mingguan"], ["monthly", "Bulanan"]] as [AnalisaPeriod, string][]).map(([val, lbl]) => (
+                        <button key={val} onClick={() => setAnalisaPeriod(val)} className={`pill-toggle-item ${analisaPeriod === val ? "active" : ""}`}>
+                          {lbl}
+                        </button>
                       ))}
-                    </ul>
+                    </div>
                   </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-[#86868b] mb-3 block font-medium">Unit Kerja</label>
+                    <div className="relative">
+                      <select value={analisaUnit} onChange={(e) => setAnalisaUnit(e.target.value)} className="apple-select text-sm">
+                        <option value="SEMUA" style={{ background: "#1c1c1e" }}>Semua Unit</option>
+                        {UNIT_KERJA_LIST.map((u) => (<option key={u} value={u} style={{ background: "#1c1c1e" }}>{u}</option>))}
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#86868b] pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+                {analysisData && (
+                  <p className="text-xs text-[#86868b]/60 mt-4 flex items-center gap-1.5">
+                    <Calendar className="w-3 h-3" />{analysisData.periodLabel}
+                  </p>
                 )}
+              </div>
 
-                {/* Summary Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                  {[
-                    { label: "Pegawai Aktif", val: analysisData.summary.uniquePeople, color: "bg-blue-500/20 text-blue-400" },
-                    { label: "Terlambat (>08:00)", val: analysisData.summary.latePeople, color: analysisData.summary.latePeople === 0 ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400" },
-                    { label: "Total Lembur", val: analysisData.summary.totalOvertimeHours > 0 ? `${analysisData.summary.totalOvertimeHours} jam` : "0 jam", color: analysisData.summary.totalOvertimeHours > 0 ? "bg-amber-500/20 text-amber-400" : "bg-green-500/20 text-green-400" },
-                  ].map((s, i) => (
-                    <div key={i} className="stat-card liquid-glass rounded-xl p-3 text-center">
-                      <p className="text-xl font-bold text-white">{s.val}</p>
-                      <p className={`text-xs mt-1 ${s.color.split(" ")[1]}`}>{s.label}</p>
-                    </div>
+              {/* Sub-tab + Export PDF */}
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="pill-toggle">
+                  {([["ringkasan", "Ringkasan", PieChart], ["unit", "Per Unit", Building2], ["personal", "Per Orang", Users]] as [string, string, React.ElementType][]).map(([val, lbl, Ic]) => (
+                    <button key={val} onClick={() => setAnalisaSubTab(val as typeof analisaSubTab)} className={`pill-toggle-item flex items-center gap-1.5 ${analisaSubTab === val ? "active" : ""}`}>
+                      <Ic className="w-3.5 h-3.5" />{lbl}
+                    </button>
                   ))}
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                  {[
-                    { label: "Total Hadir", val: analysisData.summary.totalHadir, color: "bg-green-500/20 text-green-400" },
-                    { label: "Total Pulang", val: analysisData.summary.totalPulang, color: "bg-red-500/20 text-red-400" },
-                    { label: "Total WFH", val: analysisData.summary.totalWFH, color: "bg-orange-500/20 text-orange-400" },
-                    { label: "Total Rekord", val: analysisData.summary.totalRecords, color: "bg-purple-500/20 text-purple-400" },
-                  ].map((s, i) => (
-                    <div key={i} className="stat-card liquid-glass rounded-xl p-3 text-center">
-                      <p className="text-xl font-bold text-white">{s.val}</p>
-                      <p className={`text-xs mt-1 ${s.color.split(" ")[1]}`}>{s.label}</p>
-                    </div>
-                  ))}
-                </div>
+                <button onClick={exportAnalysisPDF} disabled={!analysisData} className="apple-btn apple-btn-secondary text-xs disabled:opacity-40">
+                  <FileText className="w-3.5 h-3.5" />Export PDF
+                </button>
+              </div>
 
-                {/* Ringkasan Tab */}
-                {analisaSubTab === "ringkasan" && (
-                  <>
-                    {/* Daily Breakdown */}
-                    <div className="liquid-glass rounded-2xl p-5 mb-4">
-                      <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2"><BarChart3 className="w-4 h-4 text-[#7986cb]" />Rekap Harian</h3>
-                      {analysisData.dailyBreakdown.length === 0 ? (<p className="text-sm text-[#9fa8da] text-center py-4">Belum ada data</p>) : (
-                        <div className="overflow-x-auto custom-scrollbar">
-                          <table className="w-full data-table text-sm">
-                            <thead><tr className="text-left text-xs uppercase tracking-wider text-[#9fa8da]"><th className="px-3 py-2.5 font-medium">Tanggal</th><th className="px-3 py-2.5 font-medium text-center">Hadir</th><th className="px-3 py-2.5 font-medium text-center">Pulang</th><th className="px-3 py-2.5 font-medium text-center">Jumlah</th><th className="px-3 py-2.5 font-medium text-center">Terlambat</th><th className="px-3 py-2.5 font-medium text-center">Lembur</th><th className="px-3 py-2.5 font-medium text-center">Status</th></tr></thead>
-                            <tbody className="divide-y divide-white/5">{analysisData.dailyBreakdown.map((d, i) => {
-                              const statusColor = d.status === 'Baik' ? 'bg-green-500/20 text-green-400' : d.status === 'Cukup' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400';
-                              return (
-                                <tr key={i} className="text-[#c5cae9]">
-                                  <td className="px-3 py-2.5 text-xs whitespace-nowrap">{d.day}</td>
-                                  <td className="px-3 py-2.5 text-center"><span className="text-green-400 font-medium">{d.hadir}</span></td>
-                                  <td className="px-3 py-2.5 text-center"><span className="text-red-400 font-medium">{d.pulang}</span></td>
-                                  <td className="px-3 py-2.5 text-center font-medium text-white">{d.unique}</td>
-                                  <td className="px-3 py-2.5 text-center"><span className={`text-xs font-medium px-2 py-0.5 rounded-full ${d.lateCount > 0 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>{d.lateCount}</span></td>
-                                  <td className="px-3 py-2.5 text-center"><span className={`text-xs font-medium px-2 py-0.5 rounded-full ${d.overtimeHours > 0 ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'}`}>{d.overtimeHours > 0 ? `${d.overtimeHours} jam` : '-'}</span></td>
-                                  <td className="px-3 py-2.5 text-center"><span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusColor}`}>{d.status}</span></td>
+              {isLoadingAnalysis ? (
+                <div className="p-20 text-center text-[#86868b]">
+                  <div className="animate-spin w-10 h-10 border-2 rounded-full mx-auto mb-4" style={{ borderColor: "rgba(41,151,255,0.3)", borderTopColor: "#2997ff" }} />
+                  <p className="text-sm">Memuat data analisa...</p>
+                </div>
+              ) : !analysisData ? (
+                <div className="p-20 text-center text-[#86868b]">
+                  <TrendingUp className="w-16 h-16 mx-auto mb-4 opacity-15" />
+                  <p className="text-sm">Belum ada data analisa</p>
+                </div>
+              ) : (
+                <>
+                  {/* Aturan Kehadiran */}
+                  <div className="apple-card p-6" style={{ borderLeft: "3px solid #2997ff" }}>
+                    <h3 className="text-sm font-semibold text-[#2997ff] mb-4 flex items-center gap-2">
+                      <FileText className="w-4 h-4" />Aturan Kehadiran
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
+                        <p className="text-xs font-semibold text-[#2997ff] mb-1.5">Jam Kerja</p>
+                        <p className="text-xs text-[#86868b] leading-relaxed">08:00 - 14:00 WIB (6 jam)</p>
+                      </div>
+                      <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
+                        <p className="text-xs font-semibold mb-1.5" style={{ color: "#ff453a" }}>Terlambat</p>
+                        <p className="text-xs text-[#86868b] leading-relaxed">Absen hadir setelah pukul 08:00. Pegawai terlambat tidak mendapatkan hak lembur.</p>
+                      </div>
+                      <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
+                        <p className="text-xs font-semibold mb-1.5" style={{ color: "#ff9f0a" }}>Lembur</p>
+                        <p className="text-xs text-[#86868b] leading-relaxed">Hanya pegawai yang hadir sebelum/tepat 08:00. Pulang mulai 15:00 = lembur 1 jam.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Insight Pimpinan */}
+                  {analysisData.insights && analysisData.insights.length > 0 && (
+                    <div className="insight-card p-6">
+                      <h3 className="text-sm font-semibold text-[#bf5af2] mb-4 flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4" />Insight untuk Pimpinan
+                      </h3>
+                      <ul className="space-y-2.5">
+                        {analysisData.insights.map((insight, i) => (
+                          <li key={i} className="text-xs text-[#86868b] flex gap-2.5">
+                            <span className="font-bold mt-px flex-shrink-0" style={{ color: "#bf5af2" }}>&#9679;</span>
+                            <span className="leading-relaxed">{insight}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Summary Cards Row 1 */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {[
+                      { label: "Pegawai Aktif", val: analysisData.summary.uniquePeople, color: "#2997ff" },
+                      { label: "Terlambat (>08:00)", val: analysisData.summary.latePeople, color: analysisData.summary.latePeople === 0 ? "#30d158" : "#ff453a" },
+                      { label: "Total Lembur", val: analysisData.summary.totalOvertimeHours > 0 ? `${analysisData.summary.totalOvertimeHours} jam` : "0 jam", color: analysisData.summary.totalOvertimeHours > 0 ? "#ff9f0a" : "#30d158" },
+                    ].map((s, i) => (
+                      <div key={i} className="stat-card-apple text-center">
+                        <p className="text-2xl font-bold text-[#f5f5f7]">{s.val}</p>
+                        <p className="text-xs mt-1" style={{ color: s.color }}>{s.label}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Summary Cards Row 2 */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[
+                      { label: "Total Hadir", val: analysisData.summary.totalHadir, color: "#30d158" },
+                      { label: "Total Pulang", val: analysisData.summary.totalPulang, color: "#ff453a" },
+                      { label: "Total WFH", val: analysisData.summary.totalWFH, color: "#ff9f0a" },
+                      { label: "Total Rekord", val: analysisData.summary.totalRecords, color: "#bf5af2" },
+                    ].map((s, i) => (
+                      <div key={i} className="stat-card-apple text-center">
+                        <p className="text-2xl font-bold text-[#f5f5f7]">{s.val}</p>
+                        <p className="text-xs mt-1" style={{ color: s.color }}>{s.label}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* ===== Ringkasan Tab ===== */}
+                  {analisaSubTab === "ringkasan" && (
+                    <>
+                      {/* Daily Breakdown */}
+                      <div className="apple-card overflow-hidden rounded-2xl">
+                        <div className="p-6 pb-0">
+                          <h3 className="text-lg font-semibold text-[#f5f5f7] mb-4 flex items-center gap-2">
+                            <BarChart3 className="w-4 h-4 text-[#86868b]" />Rekap Harian
+                          </h3>
+                        </div>
+                        {analysisData.dailyBreakdown.length === 0 ? (
+                          <p className="text-sm text-[#86868b] text-center py-8">Belum ada data</p>
+                        ) : (
+                          <div className="overflow-x-auto custom-scrollbar">
+                            <table className="data-table text-sm">
+                              <thead>
+                                <tr>
+                                  <th>Tanggal</th>
+                                  <th className="text-center">Hadir</th>
+                                  <th className="text-center">Pulang</th>
+                                  <th className="text-center">Jumlah</th>
+                                  <th className="text-center">Terlambat</th>
+                                  <th className="text-center">Lembur</th>
+                                  <th className="text-center">Status</th>
                                 </tr>
-                              );
-                            })}</tbody>
+                              </thead>
+                              <tbody>
+                                {analysisData.dailyBreakdown.map((d, i) => {
+                                  const statusColor = d.status === 'Baik' ? 'bg-[#30d158]/15 text-[#30d158]' : d.status === 'Cukup' ? 'bg-[#ff9f0a]/15 text-[#ff9f0a]' : 'bg-[#ff453a]/15 text-[#ff453a]';
+                                  return (
+                                    <tr key={i}>
+                                      <td className="text-xs whitespace-nowrap">{d.day}</td>
+                                      <td className="text-center"><span style={{ color: "#30d158" }} className="font-medium">{d.hadir}</span></td>
+                                      <td className="text-center"><span style={{ color: "#ff453a" }} className="font-medium">{d.pulang}</span></td>
+                                      <td className="text-center font-medium text-[#f5f5f7]">{d.unique}</td>
+                                      <td className="text-center">
+                                        <span className={`apple-badge ${d.lateCount > 0 ? 'bg-[#ff453a]/15 text-[#ff453a]' : 'bg-[#30d158]/15 text-[#30d158]'}`}>
+                                          {d.lateCount}
+                                        </span>
+                                      </td>
+                                      <td className="text-center">
+                                        <span className={`apple-badge ${d.overtimeHours > 0 ? 'bg-[#ff9f0a]/15 text-[#ff9f0a]' : 'bg-[#30d158]/15 text-[#30d158]'}`}>
+                                          {d.overtimeHours > 0 ? `${d.overtimeHours} jam` : '-'}
+                                        </span>
+                                      </td>
+                                      <td className="text-center">
+                                        <span className={`apple-badge ${statusColor}`}>{d.status}</span>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Lembur Detail Records */}
+                      {analysisData.lemburRecords && analysisData.lemburRecords.length > 0 && (
+                        <div className="apple-card overflow-hidden rounded-2xl" style={{ borderLeft: "3px solid #ff9f0a" }}>
+                          <div className="p-6 pb-0">
+                            <h3 className="text-sm font-semibold mb-4 flex items-center gap-2" style={{ color: "#ff9f0a" }}>
+                              <Clock className="w-4 h-4" />Detail Lembur Pegawai
+                            </h3>
+                          </div>
+                          <div className="overflow-x-auto custom-scrollbar">
+                            <table className="data-table text-sm">
+                              <thead>
+                                <tr>
+                                  <th>Nama</th>
+                                  <th className="text-center">Tanggal</th>
+                                  <th className="text-center">Jam Hadir</th>
+                                  <th className="text-center">Jam Pulang</th>
+                                  <th className="text-center">Lembur</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {analysisData.lemburRecords.map((r, i) => (
+                                  <tr key={i}>
+                                    <td className="text-xs font-medium text-[#f5f5f7]">{r.namaLengkap}</td>
+                                    <td className="text-center text-xs">{r.date}</td>
+                                    <td className="text-center text-xs">{r.hadirTime}</td>
+                                    <td className="text-center text-xs">{r.pulangTime}</td>
+                                    <td className="text-center">
+                                      <span className="apple-badge bg-[#ff9f0a]/15 text-[#ff9f0a] font-bold">{r.lemburHours} jam</span>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* ===== Unit Tab ===== */}
+                  {analisaSubTab === "unit" && (
+                    <div className="apple-card overflow-hidden rounded-2xl">
+                      <div className="p-6 pb-0">
+                        <h3 className="text-lg font-semibold text-[#f5f5f7] mb-4 flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-[#86868b]" />Rekap Per Unit Kerja
+                        </h3>
+                      </div>
+                      {analysisData.unitBreakdown.length === 0 ? (
+                        <p className="text-sm text-[#86868b] text-center py-8">Belum ada data</p>
+                      ) : (
+                        <div className="overflow-x-auto custom-scrollbar">
+                          <table className="data-table text-sm">
+                            <thead>
+                              <tr>
+                                <th>Unit Kerja</th>
+                                <th className="text-center">Jumlah</th>
+                                <th className="text-center">Hadir</th>
+                                <th className="text-center">Pulang</th>
+                                <th className="text-center">WFH</th>
+                                <th className="text-center">Terlambat</th>
+                                <th className="text-center">Lembur</th>
+                                <th className="text-center">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {analysisData.unitBreakdown.map((u, i) => {
+                                const statusColor = u.status === 'Aktif' ? 'bg-[#30d158]/15 text-[#30d158]' : u.status === 'Cukup' ? 'bg-[#ff9f0a]/15 text-[#ff9f0a]' : 'bg-[#ff453a]/15 text-[#ff453a]';
+                                return (
+                                  <tr key={i}>
+                                    <td className="text-xs font-medium text-[#f5f5f7]">{i + 1}. {u.unitKerja}</td>
+                                    <td className="text-center font-bold text-[#f5f5f7]">{u.unique}</td>
+                                    <td className="text-center"><span style={{ color: "#30d158" }}>{u.hadir}</span></td>
+                                    <td className="text-center"><span style={{ color: "#ff453a" }}>{u.pulang}</span></td>
+                                    <td className="text-center"><span style={{ color: "#ff9f0a" }}>{u.wfh}</span></td>
+                                    <td className="text-center">
+                                      <span className={`apple-badge ${u.lateCount > 0 ? 'bg-[#ff453a]/15 text-[#ff453a]' : 'bg-[#30d158]/15 text-[#30d158]'}`}>
+                                        {u.lateCount}
+                                      </span>
+                                    </td>
+                                    <td className="text-center">
+                                      <span className={`apple-badge ${u.overtimeHours > 0 ? 'bg-[#ff9f0a]/15 text-[#ff9f0a]' : 'bg-[#30d158]/15 text-[#30d158]'}`}>
+                                        {u.overtimeHours > 0 ? `${u.overtimeHours} jam` : '-'}
+                                      </span>
+                                    </td>
+                                    <td className="text-center">
+                                      <span className={`apple-badge ${statusColor}`}>{u.status}</span>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
                           </table>
                         </div>
                       )}
                     </div>
+                  )}
 
-                    {/* Lembur Detail Records */}
-                    {analysisData.lemburRecords && analysisData.lemburRecords.length > 0 && (
-                      <div className="liquid-glass rounded-2xl p-5 mb-4 border-l-4 border-amber-500">
-                        <h3 className="text-sm font-semibold text-amber-400 mb-3 flex items-center gap-2"><Clock className="w-4 h-4" />Detail Lembur Pegawai</h3>
+                  {/* ===== Personal Tab ===== */}
+                  {analisaSubTab === "personal" && (
+                    <div className="apple-card overflow-hidden rounded-2xl">
+                      <div className="p-6 pb-0">
+                        <h3 className="text-lg font-semibold text-[#f5f5f7] mb-4 flex items-center gap-2">
+                          <Users className="w-4 h-4 text-[#86868b]" />Rekap Per Orang
+                        </h3>
+                      </div>
+                      {analysisData.personBreakdown.length === 0 ? (
+                        <p className="text-sm text-[#86868b] text-center py-8">Belum ada data</p>
+                      ) : (
                         <div className="overflow-x-auto custom-scrollbar">
-                          <table className="w-full data-table text-sm">
-                            <thead><tr className="text-left text-xs uppercase tracking-wider text-[#9fa8da]"><th className="px-3 py-2.5 font-medium">Nama</th><th className="px-3 py-2.5 font-medium text-center">Tanggal</th><th className="px-3 py-2.5 font-medium text-center">Jam Hadir</th><th className="px-3 py-2.5 font-medium text-center">Jam Pulang</th><th className="px-3 py-2.5 font-medium text-center">Lembur</th></tr></thead>
-                            <tbody className="divide-y divide-white/5">{analysisData.lemburRecords.map((r, i) => (
-                              <tr key={i} className="text-[#c5cae9]">
-                                <td className="px-3 py-2.5 text-xs font-medium text-white">{r.namaLengkap}</td>
-                                <td className="px-3 py-2.5 text-center text-xs">{r.date}</td>
-                                <td className="px-3 py-2.5 text-center text-xs">{r.hadirTime}</td>
-                                <td className="px-3 py-2.5 text-center text-xs">{r.pulangTime}</td>
-                                <td className="px-3 py-2.5 text-center"><span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400">{r.lemburHours} jam</span></td>
+                          <table className="data-table text-sm">
+                            <thead>
+                              <tr>
+                                <th>Nama</th>
+                                <th className="hidden md:table-cell">Unit Kerja</th>
+                                <th className="text-center">Hari</th>
+                                <th className="text-center">Hadir</th>
+                                <th className="text-center">Pulang</th>
+                                <th className="text-center">WFH</th>
+                                <th className="text-center">Terlambat</th>
+                                <th className="text-center">Lembur</th>
+                                <th className="text-center">Status</th>
                               </tr>
-                            ))}</tbody>
+                            </thead>
+                            <tbody>
+                              {analysisData.personBreakdown.map((p, i) => {
+                                const statusColor = p.status === 'Disiplin' ? 'bg-[#30d158]/15 text-[#30d158]' : p.status === 'Cukup' ? 'bg-[#ff9f0a]/15 text-[#ff9f0a]' : 'bg-[#ff453a]/15 text-[#ff453a]';
+                                return (
+                                  <tr key={i}>
+                                    <td className="font-medium text-[#f5f5f7] text-xs">{i + 1}. {p.namaLengkap}</td>
+                                    <td className="hidden md:table-cell text-xs">{p.unitKerja}</td>
+                                    <td className="text-center">
+                                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold" style={{ background: "rgba(41,151,255,0.12)", color: "#2997ff" }}>{p.activeDays}</span>
+                                    </td>
+                                    <td className="text-center">
+                                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold" style={{ background: "rgba(48,209,88,0.12)", color: "#30d158" }}>{p.hadir}</span>
+                                    </td>
+                                    <td className="text-center">
+                                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold" style={{ background: "rgba(255,69,58,0.12)", color: "#ff453a" }}>{p.pulang}</span>
+                                    </td>
+                                    <td className="text-center">
+                                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold" style={{ background: "rgba(255,159,10,0.12)", color: "#ff9f0a" }}>{p.wfh}</span>
+                                    </td>
+                                    <td className="text-center">
+                                      <span className={`apple-badge ${p.lateCount > 0 ? 'bg-[#ff453a]/15 text-[#ff453a]' : 'bg-[#30d158]/15 text-[#30d158]'}`}>
+                                        {p.lateCount > 0 ? `${p.lateCount}x` : '-'}
+                                      </span>
+                                    </td>
+                                    <td className="text-center">
+                                      <span className={`apple-badge ${p.lemburHours > 0 ? 'bg-[#ff9f0a]/15 text-[#ff9f0a]' : 'bg-[#30d158]/15 text-[#30d158]'}`}>
+                                        {p.lemburHours > 0 ? `${p.lemburHours} jam` : '-'}
+                                      </span>
+                                    </td>
+                                    <td className="text-center">
+                                      <span className={`apple-badge ${statusColor}`}>{p.status}</span>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
                           </table>
                         </div>
-                      </div>
-                    )}
-                  </>
-                )}
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
 
-                {/* Unit Tab */}
-                {analisaSubTab === "unit" && (
-                  <div className="liquid-glass rounded-2xl p-5">
-                    <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2"><Building2 className="w-4 h-4 text-[#7986cb]" />Rekap Per Unit Kerja</h3>
-                    {analysisData.unitBreakdown.length === 0 ? (<p className="text-sm text-[#9fa8da] text-center py-4">Belum ada data</p>) : (
-                      <div className="overflow-x-auto custom-scrollbar">
-                        <table className="w-full data-table text-sm">
-                          <thead><tr className="text-left text-xs uppercase tracking-wider text-[#9fa8da]"><th className="px-3 py-2.5 font-medium">Unit Kerja</th><th className="px-3 py-2.5 font-medium text-center">Jumlah</th><th className="px-3 py-2.5 font-medium text-center">Hadir</th><th className="px-3 py-2.5 font-medium text-center">Pulang</th><th className="px-3 py-2.5 font-medium text-center">WFH</th><th className="px-3 py-2.5 font-medium text-center">Terlambat</th><th className="px-3 py-2.5 font-medium text-center">Lembur</th><th className="px-3 py-2.5 font-medium text-center">Status</th></tr></thead>
-                          <tbody className="divide-y divide-white/5">{analysisData.unitBreakdown.map((u, i) => {
-                            const statusColor = u.status === 'Aktif' ? 'bg-green-500/20 text-green-400' : u.status === 'Cukup' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400';
-                            return (
-                              <tr key={i} className="text-[#c5cae9]">
-                                <td className="px-3 py-2.5 text-xs font-medium text-white">{i + 1}. {u.unitKerja}</td>
-                                <td className="px-3 py-2.5 text-center font-bold text-white">{u.unique}</td>
-                                <td className="px-3 py-2.5 text-center"><span className="text-green-400">{u.hadir}</span></td>
-                                <td className="px-3 py-2.5 text-center"><span className="text-red-400">{u.pulang}</span></td>
-                                <td className="px-3 py-2.5 text-center"><span className="text-orange-400">{u.wfh}</span></td>
-                                <td className="px-3 py-2.5 text-center"><span className={`text-xs font-medium px-2 py-0.5 rounded-full ${u.lateCount > 0 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>{u.lateCount}</span></td>
-                                <td className="px-3 py-2.5 text-center"><span className={`text-xs font-medium px-2 py-0.5 rounded-full ${u.overtimeHours > 0 ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'}`}>{u.overtimeHours > 0 ? `${u.overtimeHours} jam` : '-'}</span></td>
-                                <td className="px-3 py-2.5 text-center"><span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusColor}`}>{u.status}</span></td>
-                              </tr>
-                            );
-                          })}</tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Personal Tab */}
-                {analisaSubTab === "personal" && (
-                  <div className="liquid-glass rounded-2xl p-5">
-                    <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2"><Users className="w-4 h-4 text-[#7986cb]" />Rekap Per Orang</h3>
-                    {analysisData.personBreakdown.length === 0 ? (<p className="text-sm text-[#9fa8da] text-center py-4">Belum ada data</p>) : (
-                      <div className="overflow-x-auto custom-scrollbar">
-                        <table className="w-full data-table text-sm">
-                          <thead><tr className="text-left text-xs uppercase tracking-wider text-[#9fa8da]"><th className="px-3 py-2.5 font-medium">Nama</th><th className="px-3 py-2.5 font-medium hidden md:table-cell">Unit Kerja</th><th className="px-3 py-2.5 font-medium text-center">Hari</th><th className="px-3 py-2.5 font-medium text-center">Hadir</th><th className="px-3 py-2.5 font-medium text-center">Pulang</th><th className="px-3 py-2.5 font-medium text-center">WFH</th><th className="px-3 py-2.5 font-medium text-center">Terlambat</th><th className="px-3 py-2.5 font-medium text-center">Lembur</th><th className="px-3 py-2.5 font-medium text-center">Status</th></tr></thead>
-                          <tbody className="divide-y divide-white/5">{analysisData.personBreakdown.map((p, i) => {
-                            const statusColor = p.status === 'Disiplin' ? 'bg-green-500/20 text-green-400' : p.status === 'Cukup' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400';
-                            return (
-                              <tr key={i} className="text-[#c5cae9]">
-                                <td className="px-3 py-2.5 font-medium text-white text-xs">{i + 1}. {p.namaLengkap}</td>
-                                <td className="px-3 py-2.5 hidden md:table-cell text-xs">{p.unitKerja}</td>
-                                <td className="px-3 py-2.5 text-center"><span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold">{p.activeDays}</span></td>
-                                <td className="px-3 py-2.5 text-center"><span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-500/20 text-green-400 text-xs font-bold">{p.hadir}</span></td>
-                                <td className="px-3 py-2.5 text-center"><span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-500/20 text-red-400 text-xs font-bold">{p.pulang}</span></td>
-                                <td className="px-3 py-2.5 text-center"><span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-orange-500/20 text-orange-400 text-xs font-bold">{p.wfh}</span></td>
-                                <td className="px-3 py-2.5 text-center"><span className={`text-xs font-medium px-2 py-0.5 rounded-full ${p.lateCount > 0 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>{p.lateCount > 0 ? `${p.lateCount}x` : '-'}</span></td>
-                                <td className="px-3 py-2.5 text-center"><span className={`text-xs font-medium px-2 py-0.5 rounded-full ${p.lemburHours > 0 ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'}`}>{p.lemburHours > 0 ? `${p.lemburHours} jam` : '-'}</span></td>
-                                <td className="px-3 py-2.5 text-center"><span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusColor}`}>{p.status}</span></td>
-                              </tr>
-                            );
-                          })}</tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
+        </div>
       </main>
 
-      {/* Photo Modal */}
+      {/* ===== Photo Modal ===== */}
       {selectedPhoto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedPhoto(null)}>
-          <div className="relative max-w-lg w-full liquid-glass-static rounded-2xl p-2 animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setSelectedPhoto(null)} className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-red-500 flex items-center justify-center hover:bg-red-600 transition-colors z-10"><X className="w-4 h-4 text-white" /></button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }} onClick={() => setSelectedPhoto(null)}>
+          <div className="relative max-w-lg w-full rounded-2xl p-2 animate-fade-in-up" style={{ background: "rgba(29,29,31,0.9)", border: "1px solid rgba(255,255,255,0.1)" }} onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setSelectedPhoto(null)} className="absolute -top-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center transition-colors z-10" style={{ background: "#ff453a" }}>
+              <X className="w-4 h-4 text-white" />
+            </button>
             <img src={selectedPhoto} alt="Foto Presensi" className="w-full rounded-xl" />
           </div>
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="relative z-10 mt-auto">
-        <div className="liquid-glass-static border-t border-white/5 py-4">
-          <div className="max-w-6xl mx-auto px-4 text-center">
-            <p className="text-xs text-[#5c6bc0]">Sistem Presensi Digital &copy; {new Date().getFullYear()} — Universitas Tulungagung</p>
-          </div>
+      {/* ===== Footer ===== */}
+      <footer className="mt-auto">
+        <div className="apple-divider" />
+        <div className="py-8 text-center">
+          <p className="text-xs text-[#86868b]">
+            Sistem Presensi Digital &copy; {new Date().getFullYear()} &mdash; Universitas Tulungagung
+          </p>
         </div>
       </footer>
     </div>
