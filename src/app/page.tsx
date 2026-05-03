@@ -54,6 +54,7 @@ const UNIT_KERJA_LIST = [
   "Inkubator Bisnis",
   "Galeri Investasi",
   "IT Mart",
+  "Sistem Informasi (SI)",
 ];
 
 type TabType = "presensi" | "wfh" | "laporan" | "analisa";
