@@ -348,7 +348,7 @@ export default function PresensiPage() {
     const s = analysisData.summary;
     doc.text(`Total Absensi Hadir: ${s.totalHadir}`, 14, y); y += 5;
     doc.text(`Total Absensi Pulang: ${s.totalPulang}`, 14, y); y += 5;
-    doc.text(`Jumlah Orang Unik: ${s.uniquePeople}`, 14, y); y += 5;
+    doc.text(`Jumlah: ${s.uniquePeople}`, 14, y); y += 5;
     doc.text(`Total Aktivitas WFH: ${s.totalWFH}`, 14, y); y += 5;
     doc.text(`Total Rekord: ${s.totalRecords}`, 14, y); y += 10;
 
@@ -358,7 +358,7 @@ export default function PresensiPage() {
       doc.text("Rekap Per Unit Kerja", 14, y); y += 7;
       doc.setFontSize(8); doc.setFont("helvetica", "bold");
       doc.text("No", 14, y); doc.text("Unit Kerja", 24, y); doc.text("Hadir", 120, y);
-      doc.text("Pulang", 150, y); doc.text("WFH", 180, y); doc.text("Orang Unik", 210, y);
+      doc.text("Pulang", 150, y); doc.text("WFH", 180, y); doc.text("Jumlah", 210, y);
       y += 2; doc.setLineWidth(0.3); doc.line(14, y, pageW - 14, y); y += 4;
       doc.setFont("helvetica", "normal");
       analysisData.unitBreakdown.forEach((u, i) => {
@@ -377,7 +377,7 @@ export default function PresensiPage() {
       doc.setFontSize(12); doc.setFont("helvetica", "bold");
       doc.text("Rekap Harian", 14, y); y += 7;
       doc.setFontSize(8); doc.setFont("helvetica", "bold");
-      doc.text("Tanggal", 14, y); doc.text("Hadir", 80, y); doc.text("Pulang", 120, y); doc.text("Unik", 160, y);
+      doc.text("Tanggal", 14, y); doc.text("Hadir", 80, y); doc.text("Pulang", 120, y); doc.text("Jumlah", 160, y);
       y += 2; doc.line(14, y, pageW - 14, y); y += 4;
       doc.setFont("helvetica", "normal");
       analysisData.dailyBreakdown.forEach((d) => {
@@ -485,7 +485,7 @@ export default function PresensiPage() {
             {[
               { val: stats.today.hadir, label: "Hadir Hari Ini", icon: LogIn, color: "bg-green-500/20", iconColor: "text-green-400" },
               { val: stats.today.pulang, label: "Pulang Hari Ini", icon: LogOut, color: "bg-red-500/20", iconColor: "text-red-400" },
-              { val: stats.today.uniquePeople, label: "Unik Hari Ini", icon: Users, color: "bg-blue-500/20", iconColor: "text-blue-400" },
+              { val: stats.today.uniquePeople, label: "Jumlah Hari Ini", icon: Users, color: "bg-blue-500/20", iconColor: "text-blue-400" },
               { val: stats.totals.wfh, label: "Total WFH", icon: Activity, color: "bg-orange-500/20", iconColor: "text-orange-400" },
             ].map((s, i) => (
               <div key={i} className="stat-card liquid-glass rounded-2xl p-4">
@@ -712,7 +712,7 @@ export default function PresensiPage() {
                   {[
                     { label: "Total Hadir", val: analysisData.summary.totalHadir, color: "bg-green-500/20 text-green-400" },
                     { label: "Total Pulang", val: analysisData.summary.totalPulang, color: "bg-red-500/20 text-red-400" },
-                    { label: "Orang Unik", val: analysisData.summary.uniquePeople, color: "bg-blue-500/20 text-blue-400" },
+                    { label: "Jumlah", val: analysisData.summary.uniquePeople, color: "bg-blue-500/20 text-blue-400" },
                     { label: "Total WFH", val: analysisData.summary.totalWFH, color: "bg-orange-500/20 text-orange-400" },
                     { label: "Total Rekord", val: analysisData.summary.totalRecords, color: "bg-purple-500/20 text-purple-400" },
                   ].map((s, i) => (
@@ -732,7 +732,7 @@ export default function PresensiPage() {
                       {analysisData.dailyBreakdown.length === 0 ? (<p className="text-sm text-[#9fa8da] text-center py-4">Belum ada data</p>) : (
                         <div className="overflow-x-auto custom-scrollbar">
                           <table className="w-full data-table text-sm">
-                            <thead><tr className="text-left text-xs uppercase tracking-wider text-[#9fa8da]"><th className="px-4 py-2.5 font-medium">Tanggal</th><th className="px-4 py-2.5 font-medium text-center">Hadir</th><th className="px-4 py-2.5 font-medium text-center">Pulang</th><th className="px-4 py-2.5 font-medium text-center">Unik</th><th className="px-4 py-2.5 font-medium text-center">Visualisasi</th></tr></thead>
+                            <thead><tr className="text-left text-xs uppercase tracking-wider text-[#9fa8da]"><th className="px-4 py-2.5 font-medium">Tanggal</th><th className="px-4 py-2.5 font-medium text-center">Hadir</th><th className="px-4 py-2.5 font-medium text-center">Pulang</th><th className="px-4 py-2.5 font-medium text-center">Jumlah</th><th className="px-4 py-2.5 font-medium text-center">Visualisasi</th></tr></thead>
                             <tbody className="divide-y divide-white/5">{analysisData.dailyBreakdown.map((d, i) => {
                               const maxVal = Math.max(...analysisData.dailyBreakdown.map(x => x.hadir + x.pulang), 1);
                               const total = d.hadir + d.pulang;
@@ -761,7 +761,7 @@ export default function PresensiPage() {
                     {analysisData.unitBreakdown.length === 0 ? (<p className="text-sm text-[#9fa8da] text-center py-4">Belum ada data</p>) : (
                       <div className="overflow-x-auto custom-scrollbar">
                         <table className="w-full data-table text-sm">
-                          <thead><tr className="text-left text-xs uppercase tracking-wider text-[#9fa8da]"><th className="px-4 py-2.5 font-medium">Unit Kerja</th><th className="px-4 py-2.5 font-medium text-center">Hadir</th><th className="px-4 py-2.5 font-medium text-center">Pulang</th><th className="px-4 py-2.5 font-medium text-center">WFH</th><th className="px-4 py-2.5 font-medium text-center">Orang Unik</th><th className="px-4 py-2.5 font-medium text-center">Visualisasi</th></tr></thead>
+                          <thead><tr className="text-left text-xs uppercase tracking-wider text-[#9fa8da]"><th className="px-4 py-2.5 font-medium">Unit Kerja</th><th className="px-4 py-2.5 font-medium text-center">Hadir</th><th className="px-4 py-2.5 font-medium text-center">Pulang</th><th className="px-4 py-2.5 font-medium text-center">WFH</th><th className="px-4 py-2.5 font-medium text-center">Jumlah</th><th className="px-4 py-2.5 font-medium text-center">Visualisasi</th></tr></thead>
                           <tbody className="divide-y divide-white/5">{analysisData.unitBreakdown.map((u, i) => {
                             const maxVal = Math.max(...analysisData.unitBreakdown.map(x => x.unique), 1);
                             const pct = (u.unique / maxVal) * 100;
