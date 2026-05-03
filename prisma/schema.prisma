@@ -3,25 +3,26 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 model Attendance {
   id          String   @id @default(cuid())
   namaLengkap String
   unitKerja   String
-  type        String   // "HADIR" or "PULANG"
-  pesan       String?  // optional message
-  photoPath   String?  // path to uploaded photo
-  photoData   String?  // base64 photo data stored directly
+  type        String
+  pesan       String?
+  photoPath   String?
+  photoData   String?
   createdAt   DateTime @default(now())
 }
 
 model WFHActivity {
-  id               String   @id @default(cuid())
-  namaLengkap      String
-  unitKerja        String
+  id                String   @id @default(cuid())
+  namaLengkap       String
+  unitKerja         String
   deskripsiPekerjaan String
-  createdAt        DateTime @default(now())
+  createdAt         DateTime @default(now())
 }
