@@ -295,6 +295,11 @@ body {
   box-shadow: 0 0 0 3px rgba(41, 151, 255, 0.15);
 }
 
+.apple-select option {
+  background: #1c1c1e;
+  color: #f5f5f7;
+}
+
 .apple-textarea {
   width: 100%;
   padding: 14px 18px;
@@ -444,13 +449,21 @@ body {
 }
 
 .pill-toggle-item {
-  padding: 8px 18px;
+  padding: 7px 14px;
   border-radius: 980px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: #86868b;
   transition: all 0.3s ease;
   cursor: pointer;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .pill-toggle-item {
+    padding: 8px 18px;
+    font-size: 13px;
+  }
 }
 
 .pill-toggle-item:hover {
@@ -480,4 +493,43 @@ body {
   background: linear-gradient(135deg, rgba(41, 151, 255, 0.08) 0%, rgba(191, 90, 242, 0.06) 100%);
   border: 1px solid rgba(41, 151, 255, 0.15);
   border-radius: 20px;
+}
+
+/* ============ MOBILE SAFE AREA (iPhone) ============ */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .apple-nav {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ============ MOBILE RESPONSIVE OVERRIDES ============ */
+@media (max-width: 639px) {
+  .apple-input, .apple-select, .apple-textarea {
+    padding: 12px 14px;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+
+  .stat-card-apple {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .apple-card {
+    border-radius: 16px;
+  }
+
+  .data-table thead th {
+    padding: 10px 12px;
+    font-size: 10px;
+  }
+
+  .data-table tbody td {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .apple-btn {
+    padding: 11px 20px;
+    font-size: 14px;
+  }
 }

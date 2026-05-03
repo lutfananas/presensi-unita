@@ -587,17 +587,18 @@ export default function PresensiPage() {
 
       {/* ===== Fixed Navigation (Frosted Glass) ===== */}
       <nav className="apple-nav">
-        <div className="max-w-[1200px] mx-auto px-6 h-12 flex items-center justify-between">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 h-12 flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg overflow-hidden flex-shrink-0">
               <Image src="/logo-universitas.png" alt="Logo" width={28} height={28} className="rounded-lg object-contain" />
             </div>
-            <span className="text-sm font-semibold text-[#f5f5f7] tracking-tight hidden sm:inline">Universitas Tulungagung</span>
+            <span className="text-sm font-semibold text-[#f5f5f7] tracking-tight hidden sm:inline">Unita</span>
           </div>
 
-          {/* Center Nav Links (pill-shaped) */}
-          <div className="flex items-center gap-1">
+          {/* Center Nav Links - Mobile: bottom bar, Desktop: pill nav */}
+          {/* Desktop nav (hidden on mobile) */}
+          <div className="hidden md:flex items-center gap-1">
             {([
               { id: "presensi" as TabType, label: "Presensi", desc: "Absensi Hadir & Pulang", icon: ClipboardList },
               { id: "wfh" as TabType, label: "WFH", desc: "Aktivitas Kerja dari Rumah", icon: Activity },
@@ -608,7 +609,7 @@ export default function PresensiPage() {
                 <button onClick={() => setActiveTab(tab.id)}
                   className={`nav-link flex items-center gap-1.5 ${activeTab === tab.id ? "active" : ""}`}>
                   <tab.icon className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span>{tab.label}</span>
                 </button>
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 rounded-lg bg-[#1d1d1f] border border-white/10 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                   <p className="text-[11px] font-medium text-[#f5f5f7]">{tab.desc}</p>
@@ -625,43 +626,58 @@ export default function PresensiPage() {
           </div>
         </div>
       </nav>
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 apple-nav border-t border-white/[0.06]" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="flex items-center justify-around py-1 px-2">
+          {([
+            { id: "presensi" as TabType, label: "Presensi", icon: ClipboardList },
+            { id: "wfh" as TabType, label: "WFH", icon: Activity },
+            { id: "laporan" as TabType, label: "Laporan", icon: BarChart3 },
+            { id: "analisa" as TabType, label: "Analisa", icon: TrendingUp },
+          ]).map((tab) => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              className={`flex flex-col items-center gap-0.5 py-1.5 px-3 rounded-xl transition-all ${activeTab === tab.id ? "text-[#2997ff]" : "text-[#86868b]"}`}>
+              <tab.icon className={`w-5 h-5 ${activeTab === tab.id ? "text-[#2997ff]" : "text-[#86868b]"}`} />
+              <span className="text-[10px] font-medium">{tab.label}</span>
+              {activeTab === tab.id && <div className="w-1 h-1 rounded-full bg-[#2997ff]" />}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      {/* ===== Main Content ===== */}
-      <main className="flex-1" style={{ paddingTop: "100px" }}>
-
-        {/* ===== Hero Section ===== */}
-        <section className="relative text-center px-6 pb-10">
+      <main className="flex-1 pb-20 md:pb-0" style={{ paddingTop: "80px" }}>
+        {/* Hero Section */}
+        <section className="relative text-center px-4 sm:px-6 pb-6 sm:pb-10">
           <div className="hero-glow" />
           <div className="relative z-10 animate-fade-in-up">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-gradient-hero mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-gradient-hero mb-3">
               Universitas Tulungagung
             </h1>
-            <p className="text-base md:text-lg text-[#86868b] max-w-xl mx-auto">
+            <p className="text-sm sm:text-base md:text-lg text-[#86868b] max-w-xl mx-auto">
               Sistem Presensi Digital
             </p>
           </div>
         </section>
 
         {/* ===== Content Wrapper ===== */}
-        <div className="apple-section-wide pb-20">
+        <div className="apple-section-wide pb-8 sm:pb-20">
 
           {/* ===== Stats Dashboard ===== */}
           {stats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12 animate-fade-in-up">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-12 animate-fade-in-up">
               {[
                 { val: stats.today.hadir, label: "Hadir Hari Ini", icon: LogIn, color: "rgba(48, 209, 88, 0.12)", iconColor: "#30d158" },
                 { val: stats.today.pulang, label: "Pulang Hari Ini", icon: LogOut, color: "rgba(255, 69, 58, 0.12)", iconColor: "#ff453a" },
                 { val: stats.today.uniquePeople, label: "Jumlah Hari Ini", icon: Users, color: "rgba(41, 151, 255, 0.12)", iconColor: "#2997ff" },
                 { val: stats.totals.wfh, label: "Total WFH", icon: Activity, color: "rgba(255, 159, 10, 0.12)", iconColor: "#ff9f0a" },
               ].map((s, i) => (
-                <div key={i} className={`stat-card-apple animate-fade-in-up animate-fade-in-up-d${i + 1}`}>
-                  <div className="flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: s.color }}>
-                      <s.icon className="w-5 h-5" style={{ color: s.iconColor }} />
+                <div key={i} className={`stat-card-apple p-3 sm:p-6 animate-fade-in-up animate-fade-in-up-d${i + 1}`}>
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: s.color }}>
+                      <s.icon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: s.iconColor }} />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-[#f5f5f7]">{s.val}</p>
-                      <p className="text-xs text-[#86868b] mt-0.5">{s.label}</p>
+                      <p className="text-xl sm:text-2xl font-bold text-[#f5f5f7]">{s.val}</p>
+                      <p className="text-[10px] sm:text-xs text-[#86868b] mt-0.5">{s.label}</p>
                     </div>
                   </div>
                 </div>
@@ -671,31 +687,31 @@ export default function PresensiPage() {
 
           {/* ========== TAB: PRESENSI ========== */}
           {activeTab === "presensi" && (
-            <div className="animate-fade-in-up space-y-8">
+            <div className="animate-fade-in-up space-y-5 sm:space-y-8">
 
               {/* Clock Display */}
-              <div className="apple-card p-8 text-center">
+              <div className="apple-card p-5 sm:p-8 text-center">
                 <div className="flex items-center justify-center gap-2 mb-3">
                   <Clock className="w-4 h-4 text-[#86868b]" />
                   <span className="text-xs uppercase tracking-widest text-[#86868b] font-medium">Waktu Lokal</span>
                 </div>
-                <p className="text-3xl md:text-4xl font-bold text-[#f5f5f7] font-mono tracking-wider">
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#f5f5f7] font-mono tracking-wider">
                   <ClockDisplay />
                 </p>
               </div>
 
               {/* Attendance Form */}
-              <div className="apple-card p-6 md:p-10">
-                <h2 className="text-2xl font-bold text-[#f5f5f7] mb-8 flex items-center gap-3">
+              <div className="apple-card p-5 sm:p-6 md:p-10">
+                <h2 className="text-xl sm:text-2xl font-bold text-[#f5f5f7] mb-6 sm:mb-8 flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(41, 151, 255, 0.12)" }}>
                     <ClipboardList className="w-4.5 h-4.5 text-[#2997ff]" />
                   </div>
                   Form Presensi
                 </h2>
-                <div className="space-y-7">
+                <div className="space-y-5 sm:space-y-7">
                   {/* Nama Lengkap */}
                   <div>
-                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#86868b] font-medium mb-3">
+                    <label className="flex items-center gap-2 text-[10px] sm:text-xs uppercase tracking-widest text-[#86868b] font-medium mb-2.5 sm:mb-3">
                       <User className="w-3.5 h-3.5" />
                       Nama Lengkap <span style={{ color: "#ff453a" }}>*</span>
                       <span className="normal-case tracking-normal text-[#86868b]/60 ml-1">(tanpa gelar)</span>
@@ -802,14 +818,14 @@ export default function PresensiPage() {
 
           {/* ========== TAB: WFH ========== */}
           {activeTab === "wfh" && (
-            <div className="animate-fade-in-up space-y-8">
-              <div className="apple-card p-6 md:p-10">
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255, 159, 10, 0.12)" }}>
-                    <Activity className="w-5 h-5" style={{ color: "#ff9f0a" }} />
+            <div className="animate-fade-in-up space-y-5 sm:space-y-8">
+              <div className="apple-card p-5 sm:p-6 md:p-10">
+                <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+                  <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255, 159, 10, 0.12)" }}>
+                    <Activity className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: "#ff9f0a" }} />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-[#f5f5f7]">Submit Aktivitas WFH</h2>
+                    <h2 className="text-xl sm:text-2xl font-bold text-[#f5f5f7]">Submit Aktivitas WFH</h2>
                     <p className="text-xs text-[#86868b] mt-0.5">Catat aktivitas pekerjaan dari rumah Anda</p>
                   </div>
                 </div>
