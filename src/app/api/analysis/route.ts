@@ -167,11 +167,6 @@ export async function GET(request: NextRequest) {
       if (count > peakHourCount) { peakHour = hour; peakHourCount = count; }
     });
 
-    // Check-out rate
-    const checkOutRate = uniqueHadirNames.size > 0
-      ? Math.round((uniquePulangNames.size / uniqueHadirNames.size) * 100)
-      : 0;
-
     // Overtime totals
     let totalOvertimeHours = 0;
     let totalOvertimePeople = 0;
@@ -196,19 +191,17 @@ export async function GET(request: NextRequest) {
 
     const dailyBreakdown = Array.from(dayMap.entries()).map(([day, data]) => {
       const unique = new Set([...data.hadirNames, ...data.pulangNames]).size;
-      const dayCheckOutRate = data.hadirNames.size > 0
-        ? Math.round((data.pulangNames.size / data.hadirNames.size) * 100)
-        : 0;
       let status: 'Baik' | 'Cukup' | 'Perlu Perhatian' = 'Baik';
-      if (dayCheckOutRate < 50) status = 'Perlu Perhatian';
-      else if (dayCheckOutRate < 80) status = 'Cukup';
+      const totalActivities = data.hadir + data.pulang;
+      if (totalActivities === 0) status = 'Perlu Perhatian';
+      else if (unique < 5) status = 'Cukup';
 
       const dayKey = new Date().toLocaleDateString('id-ID');
       const dOvertime = dayOvertimeMap.get(day);
       const lateCount = dOvertime ? dOvertime.latePeople.size : 0;
       const overtimeHours = dOvertime ? dOvertime.overtimeHours : 0;
 
-      return { day, hadir: data.hadir, pulang: data.pulang, unique, checkOutRate: dayCheckOutRate, status, lateCount, overtimeHours };
+      return { day, hadir: data.hadir, pulang: data.pulang, unique, status, lateCount, overtimeHours };
     }).reverse();
 
     // ============ PER-UNIT BREAKDOWN ============
@@ -230,9 +223,6 @@ export async function GET(request: NextRequest) {
 
     const unitBreakdown = Array.from(unitMap.entries()).map(([unitKerja, data]) => {
       const unique = new Set([...data.hadirNames, ...data.pulangNames, ...data.wfhNames]).size;
-      const unitCheckOutRate = data.hadirNames.size > 0
-        ? Math.round((data.pulangNames.size / data.hadirNames.size) * 100)
-        : 0;
       const totalActivities = data.hadir + data.pulang + data.wfh;
       const wfhRate = totalActivities > 0 ? Math.round((data.wfh / totalActivities) * 100) : 0;
       const activityRate = Math.round((unique / maxUnitUnique) * 100);
@@ -251,7 +241,7 @@ export async function GET(request: NextRequest) {
         }
       });
 
-      return { unitKerja, hadir: data.hadir, pulang: data.pulang, wfh: data.wfh, unique, checkOutRate: unitCheckOutRate, wfhRate, status, lateCount: unitLateCount, overtimeHours: unitOvertimeHours };
+      return { unitKerja, hadir: data.hadir, pulang: data.pulang, wfh: data.wfh, unique, wfhRate, status, lateCount: unitLateCount, overtimeHours: unitOvertimeHours };
     }).sort((a, b) => b.unique - a.unique);
 
     // ============ PER-PERSON BREAKDOWN ============
@@ -304,15 +294,6 @@ export async function GET(request: NextRequest) {
 
     // ============ INSIGHTS ============
     const insights: string[] = [];
-
-    // Insight: Check-out rate
-    if (checkOutRate < 50) {
-      insights.push(`Tingkat kelengkapan absensi pulang hanya ${checkOutRate}%. Perlu diingatkan kepada pegawai untuk absensi pulang.`);
-    } else if (checkOutRate < 80) {
-      insights.push(`Tingkat kelengkapan absensi pulang ${checkOutRate}%. Masih ${uniqueHadirNames.size - uniquePulangNames.size} pegawai belum konsisten absensi pulang.`);
-    } else {
-      insights.push(`Tingkat kelengkapan absensi pulang baik (${checkOutRate}%).`);
-    }
 
     // Insight: Late
     if (uniqueLateNames.length > 0) {
@@ -382,7 +363,6 @@ export async function GET(request: NextRequest) {
           uniquePeople: uniqueNames.size,
           totalWFH: allWFH.length,
           totalRecords: allAttendance.length,
-          checkOutRate,
           lateCheckIns: lateCheckIns.length,
           latePeople: uniqueLateNames.length,
           lateNames: uniqueLateNames,
