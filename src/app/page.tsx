@@ -84,11 +84,12 @@ interface AnalysisData {
   periodLabel: string;
   startDate: string;
   endDate: string;
-  summary: { totalHadir: number; totalPulang: number; uniquePeople: number; totalWFH: number; totalRecords: number; checkOutRate: number; lateCheckIns: number; latePeople: number; peakHour: number; peakHourCount: number };
+  summary: { totalHadir: number; totalPulang: number; uniquePeople: number; totalWFH: number; totalRecords: number; checkOutRate: number; lateCheckIns: number; latePeople: number; lateNames: string[]; peakHour: number; peakHourCount: number; totalOvertimeHours: number; totalOvertimePeople: number };
   insights: string[];
-  dailyBreakdown: { day: string; hadir: number; pulang: number; unique: number; checkOutRate: number; status: string }[];
-  unitBreakdown: { unitKerja: string; hadir: number; pulang: number; wfh: number; unique: number; checkOutRate: number; wfhRate: number; status: string }[];
-  personBreakdown: { namaLengkap: string; unitKerja: string; hadir: number; pulang: number; wfh: number; total: number; activeDays: number; pesan: string[]; status: string }[];
+  dailyBreakdown: { day: string; hadir: number; pulang: number; unique: number; checkOutRate: number; status: string; lateCount: number; overtimeHours: number }[];
+  unitBreakdown: { unitKerja: string; hadir: number; pulang: number; wfh: number; unique: number; checkOutRate: number; wfhRate: number; status: string; lateCount: number; overtimeHours: number }[];
+  personBreakdown: { namaLengkap: string; unitKerja: string; hadir: number; pulang: number; wfh: number; total: number; activeDays: number; pesan: string[]; status: string; lateCount: number; lemburHours: number; isOnTime: boolean }[];
+  lemburRecords: { namaLengkap: string; date: string; hadirTime: string; pulangTime: string; lemburHours: number }[];
 }
 
 // ============ MAIN PAGE ============
@@ -351,13 +352,18 @@ export default function PresensiPage() {
     doc.text(`Total Absensi Hadir: ${s.totalHadir}`, 14, y); y += 5;
     doc.text(`Total Absensi Pulang: ${s.totalPulang}`, 14, y); y += 5;
     doc.text(`Kelengkapan Pulang: ${s.checkOutRate}%`, 14, y); y += 5;
-    doc.text(`Keterlambatan (>08:00): ${s.latePeople} orang (${s.lateCheckIns} kali)`, 14, y); y += 5;
+    doc.text(`Terlambat (>08:00): ${s.latePeople} orang (${s.lateCheckIns} kali)`, 14, y); y += 5;
+    doc.text(`Total Lembur: ${s.totalOvertimeHours} jam (${s.totalOvertimePeople} pegawai)`, 14, y); y += 5;
     doc.text(`Total Aktivitas WFH: ${s.totalWFH}`, 14, y); y += 5;
     doc.text(`Total Rekord: ${s.totalRecords}`, 14, y); y += 5;
-    if (s.peakHourCount > 0) {
-      doc.text(`Jam Puncak Hadir: ${s.peakHour.toString().padStart(2, '0')}:00 (${s.peakHourCount} kali)`, 14, y); y += 5;
-    }
     y += 5;
+
+    // Aturan
+    if (y > pageH - 30) { doc.addPage(); y = 15; }
+    doc.setFontSize(9); doc.setFont("helvetica", "italic");
+    doc.text("Aturan: Jam Kerja 08:00-14:00 WIB (6 jam). Terlambat = hadir > 08:00 (tidak dapat lembur). Lembur = hadir <= 08:00 & pulang >= 15:00.", 14, y, { maxWidth: pageW - 28 }); y += 5;
+    doc.setFont("helvetica", "normal");
+    y += 3;
 
     // Insights
     if (analysisData.insights && analysisData.insights.length > 0) {
@@ -378,18 +384,19 @@ export default function PresensiPage() {
       doc.setFontSize(12); doc.setFont("helvetica", "bold");
       doc.text("Rekap Per Unit Kerja", 14, y); y += 7;
       doc.setFontSize(8); doc.setFont("helvetica", "bold");
-      doc.text("No", 14, y); doc.text("Unit Kerja", 24, y); doc.text("Jumlah", 100, y);
-      doc.text("Hadir", 120, y); doc.text("Pulang", 145, y); doc.text("WFH", 170, y);
-      doc.text("Kelengkapan", 195, y); doc.text("Rasio WFH", 225, y); doc.text("Status", 260, y);
+      doc.text("No", 14, y); doc.text("Unit Kerja", 24, y); doc.text("Jumlah", 90, y);
+      doc.text("Hadir", 108, y); doc.text("Pulang", 128, y); doc.text("WFH", 148, y);
+      doc.text("Kelengkapan", 168, y); doc.text("Terlambat", 195, y); doc.text("Lembur", 222, y); doc.text("Status", 255, y);
       y += 2; doc.setLineWidth(0.3); doc.line(14, y, pageW - 14, y); y += 4;
       doc.setFont("helvetica", "normal");
       analysisData.unitBreakdown.forEach((u, i) => {
         if (y > pageH - 15) { doc.addPage(); y = 15; }
         doc.text(`${i + 1}`, 14, y); doc.text(u.unitKerja, 24, y);
-        doc.text(String(u.unique), 100, y); doc.text(String(u.hadir), 120, y);
-        doc.text(String(u.pulang), 145, y); doc.text(String(u.wfh), 170, y);
-        doc.text(`${u.checkOutRate}%`, 195, y); doc.text(`${u.wfhRate}%`, 225, y);
-        doc.text(u.status, 260, y);
+        doc.text(String(u.unique), 90, y); doc.text(String(u.hadir), 108, y);
+        doc.text(String(u.pulang), 128, y); doc.text(String(u.wfh), 148, y);
+        doc.text(`${u.checkOutRate}%`, 168, y); doc.text(String(u.lateCount), 195, y);
+        doc.text(u.overtimeHours > 0 ? `${u.overtimeHours} jam` : "-", 222, y);
+        doc.text(u.status, 255, y);
         y += 5;
       });
       y += 5;
@@ -401,15 +408,18 @@ export default function PresensiPage() {
       doc.setFontSize(12); doc.setFont("helvetica", "bold");
       doc.text("Rekap Harian", 14, y); y += 7;
       doc.setFontSize(8); doc.setFont("helvetica", "bold");
-      doc.text("Tanggal", 14, y); doc.text("Hadir", 80, y); doc.text("Pulang", 110, y);
-      doc.text("Jumlah", 140, y); doc.text("Kelengkapan", 170, y); doc.text("Status", 210, y);
+      doc.text("Tanggal", 14, y); doc.text("Hadir", 65, y); doc.text("Pulang", 90, y);
+      doc.text("Jumlah", 115, y); doc.text("Kelengkapan", 140, y);
+      doc.text("Terlambat", 175, y); doc.text("Lembur", 210, y); doc.text("Status", 250, y);
       y += 2; doc.line(14, y, pageW - 14, y); y += 4;
       doc.setFont("helvetica", "normal");
       analysisData.dailyBreakdown.forEach((d) => {
         if (y > pageH - 15) { doc.addPage(); y = 15; }
-        doc.text(d.day, 14, y); doc.text(String(d.hadir), 80, y);
-        doc.text(String(d.pulang), 110, y); doc.text(String(d.unique), 140, y);
-        doc.text(`${d.checkOutRate}%`, 170, y); doc.text(d.status, 210, y);
+        doc.text(d.day, 14, y); doc.text(String(d.hadir), 65, y);
+        doc.text(String(d.pulang), 90, y); doc.text(String(d.unique), 115, y);
+        doc.text(`${d.checkOutRate}%`, 140, y); doc.text(String(d.lateCount), 175, y);
+        doc.text(d.overtimeHours > 0 ? `${d.overtimeHours} jam` : "-", 210, y);
+        doc.text(d.status, 250, y);
         y += 5;
       });
       y += 5;
@@ -421,18 +431,20 @@ export default function PresensiPage() {
       doc.setFontSize(12); doc.setFont("helvetica", "bold");
       doc.text("Rekap Per Orang", 14, y); y += 7;
       doc.setFontSize(8); doc.setFont("helvetica", "bold");
-      doc.text("No", 14, y); doc.text("Nama", 24, y); doc.text("Unit Kerja", 90, y);
-      doc.text("Hari Aktif", 160, y); doc.text("Hadir", 185, y); doc.text("Pulang", 210, y);
-      doc.text("WFH", 235, y); doc.text("Status", 260, y);
+      doc.text("No", 14, y); doc.text("Nama", 24, y); doc.text("Unit Kerja", 80, y);
+      doc.text("Hari", 140, y); doc.text("Hadir", 158, y); doc.text("Pulang", 178, y);
+      doc.text("WFH", 198, y); doc.text("Terlambat", 218, y); doc.text("Lembur", 243, y); doc.text("Status", 268, y);
       y += 2; doc.line(14, y, pageW - 14, y); y += 4;
       doc.setFont("helvetica", "normal");
       analysisData.personBreakdown.forEach((p, i) => {
         if (y > pageH - 10) { doc.addPage(); y = 15; }
         doc.text(`${i + 1}`, 14, y); doc.text(p.namaLengkap, 24, y);
-        doc.text(p.unitKerja, 90, y, { maxWidth: 65 });
-        doc.text(String(p.activeDays), 160, y); doc.text(String(p.hadir), 185, y);
-        doc.text(String(p.pulang), 210, y); doc.text(String(p.wfh), 235, y);
-        doc.text(p.status, 260, y);
+        doc.text(p.unitKerja, 80, y, { maxWidth: 55 });
+        doc.text(String(p.activeDays), 140, y); doc.text(String(p.hadir), 158, y);
+        doc.text(String(p.pulang), 178, y); doc.text(String(p.wfh), 198, y);
+        doc.text(p.lateCount > 0 ? `${p.lateCount}x` : "-", 218, y);
+        doc.text(p.lemburHours > 0 ? `${p.lemburHours} jam` : "-", 243, y);
+        doc.text(p.status, 268, y);
         y += 5;
       });
     }
@@ -732,6 +744,25 @@ export default function PresensiPage() {
               <div className="p-16 text-center text-[#9fa8da]"><TrendingUp className="w-16 h-16 mx-auto mb-4 opacity-20" /><p className="text-sm">Belum ada data analisa</p></div>
             ) : (
               <>
+                {/* Aturan Kehadiran Info */}
+                <div className="liquid-glass rounded-2xl p-4 mb-6 border-l-4 border-[#42a5f5]">
+                  <h3 className="text-sm font-semibold text-[#64b5f6] mb-3 flex items-center gap-2"><FileText className="w-4 h-4" />Aturan Kehadiran</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="bg-[#0a0e27]/50 rounded-xl p-3">
+                      <p className="text-xs font-semibold text-[#64b5f6] mb-1">Jam Kerja</p>
+                      <p className="text-xs text-[#c5cae9]">08:00 - 14:00 WIB (6 jam)</p>
+                    </div>
+                    <div className="bg-[#0a0e27]/50 rounded-xl p-3">
+                      <p className="text-xs font-semibold text-red-400 mb-1">Terlambat</p>
+                      <p className="text-xs text-[#c5cae9]">Absen hadir setelah pukul 08:00. Pegawai terlambat tidak mendapatkan hak lembur.</p>
+                    </div>
+                    <div className="bg-[#0a0e27]/50 rounded-xl p-3">
+                      <p className="text-xs font-semibold text-amber-400 mb-1">Lembur</p>
+                      <p className="text-xs text-[#c5cae9]">Hanya pegawai yang hadir sebelum/tepat 08:00. Pulang 14:00-14:59 belum lembur. Pulang mulai 15:00 = lembur 1 jam.</p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Insight Pimpinan */}
                 {analysisData.insights && analysisData.insights.length > 0 && (
                   <div className="liquid-glass rounded-2xl p-5 mb-6 border-l-4 border-[#7c4dff]">
@@ -750,7 +781,7 @@ export default function PresensiPage() {
                     { label: "Pegawai Aktif", val: analysisData.summary.uniquePeople, color: "bg-blue-500/20 text-blue-400" },
                     { label: "Kelengkapan Pulang", val: `${analysisData.summary.checkOutRate}%`, color: analysisData.summary.checkOutRate >= 80 ? "bg-green-500/20 text-green-400" : analysisData.summary.checkOutRate >= 50 ? "bg-yellow-500/20 text-yellow-400" : "bg-red-500/20 text-red-400" },
                     { label: "Terlambat (>08:00)", val: analysisData.summary.latePeople, color: analysisData.summary.latePeople === 0 ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400" },
-                    { label: "Jam Puncak Hadir", val: analysisData.summary.peakHourCount > 0 ? `${analysisData.summary.peakHour.toString().padStart(2, '0')}:00` : "-", color: "bg-purple-500/20 text-purple-400" },
+                    { label: "Total Lembur", val: analysisData.summary.totalOvertimeHours > 0 ? `${analysisData.summary.totalOvertimeHours} jam` : "0 jam", color: analysisData.summary.totalOvertimeHours > 0 ? "bg-amber-500/20 text-amber-400" : "bg-green-500/20 text-green-400" },
                   ].map((s, i) => (
                     <div key={i} className="stat-card liquid-glass rounded-xl p-3 text-center">
                       <p className="text-xl font-bold text-white">{s.val}</p>
@@ -781,17 +812,19 @@ export default function PresensiPage() {
                       {analysisData.dailyBreakdown.length === 0 ? (<p className="text-sm text-[#9fa8da] text-center py-4">Belum ada data</p>) : (
                         <div className="overflow-x-auto custom-scrollbar">
                           <table className="w-full data-table text-sm">
-                            <thead><tr className="text-left text-xs uppercase tracking-wider text-[#9fa8da]"><th className="px-4 py-2.5 font-medium">Tanggal</th><th className="px-4 py-2.5 font-medium text-center">Hadir</th><th className="px-4 py-2.5 font-medium text-center">Pulang</th><th className="px-4 py-2.5 font-medium text-center">Jumlah</th><th className="px-4 py-2.5 font-medium text-center">Kelengkapan Pulang</th><th className="px-4 py-2.5 font-medium text-center">Status</th></tr></thead>
+                            <thead><tr className="text-left text-xs uppercase tracking-wider text-[#9fa8da]"><th className="px-3 py-2.5 font-medium">Tanggal</th><th className="px-3 py-2.5 font-medium text-center">Hadir</th><th className="px-3 py-2.5 font-medium text-center">Pulang</th><th className="px-3 py-2.5 font-medium text-center">Jumlah</th><th className="px-3 py-2.5 font-medium text-center">Kelengkapan</th><th className="px-3 py-2.5 font-medium text-center">Terlambat</th><th className="px-3 py-2.5 font-medium text-center">Lembur</th><th className="px-3 py-2.5 font-medium text-center">Status</th></tr></thead>
                             <tbody className="divide-y divide-white/5">{analysisData.dailyBreakdown.map((d, i) => {
                               const statusColor = d.status === 'Baik' ? 'bg-green-500/20 text-green-400' : d.status === 'Cukup' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400';
                               return (
                                 <tr key={i} className="text-[#c5cae9]">
-                                  <td className="px-4 py-2.5 text-xs whitespace-nowrap">{d.day}</td>
-                                  <td className="px-4 py-2.5 text-center"><span className="text-green-400 font-medium">{d.hadir}</span></td>
-                                  <td className="px-4 py-2.5 text-center"><span className="text-red-400 font-medium">{d.pulang}</span></td>
-                                  <td className="px-4 py-2.5 text-center font-medium text-white">{d.unique}</td>
-                                  <td className="px-4 py-2.5 text-center"><span className={`text-xs font-medium px-2 py-0.5 rounded-full ${d.checkOutRate >= 80 ? 'bg-green-500/20 text-green-400' : d.checkOutRate >= 50 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'}`}>{d.checkOutRate}%</span></td>
-                                  <td className="px-4 py-2.5 text-center"><span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusColor}`}>{d.status}</span></td>
+                                  <td className="px-3 py-2.5 text-xs whitespace-nowrap">{d.day}</td>
+                                  <td className="px-3 py-2.5 text-center"><span className="text-green-400 font-medium">{d.hadir}</span></td>
+                                  <td className="px-3 py-2.5 text-center"><span className="text-red-400 font-medium">{d.pulang}</span></td>
+                                  <td className="px-3 py-2.5 text-center font-medium text-white">{d.unique}</td>
+                                  <td className="px-3 py-2.5 text-center"><span className={`text-xs font-medium px-2 py-0.5 rounded-full ${d.checkOutRate >= 80 ? 'bg-green-500/20 text-green-400' : d.checkOutRate >= 50 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'}`}>{d.checkOutRate}%</span></td>
+                                  <td className="px-3 py-2.5 text-center"><span className={`text-xs font-medium px-2 py-0.5 rounded-full ${d.lateCount > 0 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>{d.lateCount}</span></td>
+                                  <td className="px-3 py-2.5 text-center"><span className={`text-xs font-medium px-2 py-0.5 rounded-full ${d.overtimeHours > 0 ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'}`}>{d.overtimeHours > 0 ? `${d.overtimeHours} jam` : '-'}</span></td>
+                                  <td className="px-3 py-2.5 text-center"><span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusColor}`}>{d.status}</span></td>
                                 </tr>
                               );
                             })}</tbody>
@@ -799,6 +832,27 @@ export default function PresensiPage() {
                         </div>
                       )}
                     </div>
+
+                    {/* Lembur Detail Records */}
+                    {analysisData.lemburRecords && analysisData.lemburRecords.length > 0 && (
+                      <div className="liquid-glass rounded-2xl p-5 mb-4 border-l-4 border-amber-500">
+                        <h3 className="text-sm font-semibold text-amber-400 mb-3 flex items-center gap-2"><Clock className="w-4 h-4" />Detail Lembur Pegawai</h3>
+                        <div className="overflow-x-auto custom-scrollbar">
+                          <table className="w-full data-table text-sm">
+                            <thead><tr className="text-left text-xs uppercase tracking-wider text-[#9fa8da]"><th className="px-3 py-2.5 font-medium">Nama</th><th className="px-3 py-2.5 font-medium text-center">Tanggal</th><th className="px-3 py-2.5 font-medium text-center">Jam Hadir</th><th className="px-3 py-2.5 font-medium text-center">Jam Pulang</th><th className="px-3 py-2.5 font-medium text-center">Lembur</th></tr></thead>
+                            <tbody className="divide-y divide-white/5">{analysisData.lemburRecords.map((r, i) => (
+                              <tr key={i} className="text-[#c5cae9]">
+                                <td className="px-3 py-2.5 text-xs font-medium text-white">{r.namaLengkap}</td>
+                                <td className="px-3 py-2.5 text-center text-xs">{r.date}</td>
+                                <td className="px-3 py-2.5 text-center text-xs">{r.hadirTime}</td>
+                                <td className="px-3 py-2.5 text-center text-xs">{r.pulangTime}</td>
+                                <td className="px-3 py-2.5 text-center"><span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400">{r.lemburHours} jam</span></td>
+                              </tr>
+                            ))}</tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
 
@@ -809,7 +863,7 @@ export default function PresensiPage() {
                     {analysisData.unitBreakdown.length === 0 ? (<p className="text-sm text-[#9fa8da] text-center py-4">Belum ada data</p>) : (
                       <div className="overflow-x-auto custom-scrollbar">
                         <table className="w-full data-table text-sm">
-                          <thead><tr className="text-left text-xs uppercase tracking-wider text-[#9fa8da]"><th className="px-3 py-2.5 font-medium">Unit Kerja</th><th className="px-3 py-2.5 font-medium text-center">Jumlah</th><th className="px-3 py-2.5 font-medium text-center">Hadir</th><th className="px-3 py-2.5 font-medium text-center">Pulang</th><th className="px-3 py-2.5 font-medium text-center">WFH</th><th className="px-3 py-2.5 font-medium text-center">Kelengkapan</th><th className="px-3 py-2.5 font-medium text-center">Rasio WFH</th><th className="px-3 py-2.5 font-medium text-center">Status</th></tr></thead>
+                          <thead><tr className="text-left text-xs uppercase tracking-wider text-[#9fa8da]"><th className="px-3 py-2.5 font-medium">Unit Kerja</th><th className="px-3 py-2.5 font-medium text-center">Jumlah</th><th className="px-3 py-2.5 font-medium text-center">Hadir</th><th className="px-3 py-2.5 font-medium text-center">Pulang</th><th className="px-3 py-2.5 font-medium text-center">WFH</th><th className="px-3 py-2.5 font-medium text-center">Kelengkapan</th><th className="px-3 py-2.5 font-medium text-center">Terlambat</th><th className="px-3 py-2.5 font-medium text-center">Lembur</th><th className="px-3 py-2.5 font-medium text-center">Status</th></tr></thead>
                           <tbody className="divide-y divide-white/5">{analysisData.unitBreakdown.map((u, i) => {
                             const statusColor = u.status === 'Aktif' ? 'bg-green-500/20 text-green-400' : u.status === 'Cukup' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400';
                             return (
@@ -820,7 +874,8 @@ export default function PresensiPage() {
                                 <td className="px-3 py-2.5 text-center"><span className="text-red-400">{u.pulang}</span></td>
                                 <td className="px-3 py-2.5 text-center"><span className="text-orange-400">{u.wfh}</span></td>
                                 <td className="px-3 py-2.5 text-center"><span className={`text-xs font-medium px-2 py-0.5 rounded-full ${u.checkOutRate >= 80 ? 'bg-green-500/20 text-green-400' : u.checkOutRate >= 50 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'}`}>{u.checkOutRate}%</span></td>
-                                <td className="px-3 py-2.5 text-center"><span className="text-xs font-medium px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400">{u.wfhRate}%</span></td>
+                                <td className="px-3 py-2.5 text-center"><span className={`text-xs font-medium px-2 py-0.5 rounded-full ${u.lateCount > 0 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>{u.lateCount}</span></td>
+                                <td className="px-3 py-2.5 text-center"><span className={`text-xs font-medium px-2 py-0.5 rounded-full ${u.overtimeHours > 0 ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'}`}>{u.overtimeHours > 0 ? `${u.overtimeHours} jam` : '-'}</span></td>
                                 <td className="px-3 py-2.5 text-center"><span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusColor}`}>{u.status}</span></td>
                               </tr>
                             );
@@ -838,17 +893,19 @@ export default function PresensiPage() {
                     {analysisData.personBreakdown.length === 0 ? (<p className="text-sm text-[#9fa8da] text-center py-4">Belum ada data</p>) : (
                       <div className="overflow-x-auto custom-scrollbar">
                         <table className="w-full data-table text-sm">
-                          <thead><tr className="text-left text-xs uppercase tracking-wider text-[#9fa8da]"><th className="px-3 py-2.5 font-medium">Nama</th><th className="px-3 py-2.5 font-medium hidden md:table-cell">Unit Kerja</th><th className="px-3 py-2.5 font-medium text-center">Hari Aktif</th><th className="px-3 py-2.5 font-medium text-center">Hadir</th><th className="px-3 py-2.5 font-medium text-center">Pulang</th><th className="px-3 py-2.5 font-medium text-center">WFH</th><th className="px-3 py-2.5 font-medium text-center">Status</th></tr></thead>
+                          <thead><tr className="text-left text-xs uppercase tracking-wider text-[#9fa8da]"><th className="px-3 py-2.5 font-medium">Nama</th><th className="px-3 py-2.5 font-medium hidden md:table-cell">Unit Kerja</th><th className="px-3 py-2.5 font-medium text-center">Hari</th><th className="px-3 py-2.5 font-medium text-center">Hadir</th><th className="px-3 py-2.5 font-medium text-center">Pulang</th><th className="px-3 py-2.5 font-medium text-center">WFH</th><th className="px-3 py-2.5 font-medium text-center">Terlambat</th><th className="px-3 py-2.5 font-medium text-center">Lembur</th><th className="px-3 py-2.5 font-medium text-center">Status</th></tr></thead>
                           <tbody className="divide-y divide-white/5">{analysisData.personBreakdown.map((p, i) => {
                             const statusColor = p.status === 'Disiplin' ? 'bg-green-500/20 text-green-400' : p.status === 'Cukup' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400';
                             return (
                               <tr key={i} className="text-[#c5cae9]">
                                 <td className="px-3 py-2.5 font-medium text-white text-xs">{i + 1}. {p.namaLengkap}</td>
                                 <td className="px-3 py-2.5 hidden md:table-cell text-xs">{p.unitKerja}</td>
-                                <td className="px-3 py-2.5 text-center"><span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold">{p.activeDays}</span></td>
-                                <td className="px-3 py-2.5 text-center"><span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-green-500/20 text-green-400 text-xs font-bold">{p.hadir}</span></td>
-                                <td className="px-3 py-2.5 text-center"><span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-red-500/20 text-red-400 text-xs font-bold">{p.pulang}</span></td>
-                                <td className="px-3 py-2.5 text-center"><span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-orange-500/20 text-orange-400 text-xs font-bold">{p.wfh}</span></td>
+                                <td className="px-3 py-2.5 text-center"><span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold">{p.activeDays}</span></td>
+                                <td className="px-3 py-2.5 text-center"><span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-500/20 text-green-400 text-xs font-bold">{p.hadir}</span></td>
+                                <td className="px-3 py-2.5 text-center"><span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-500/20 text-red-400 text-xs font-bold">{p.pulang}</span></td>
+                                <td className="px-3 py-2.5 text-center"><span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-orange-500/20 text-orange-400 text-xs font-bold">{p.wfh}</span></td>
+                                <td className="px-3 py-2.5 text-center"><span className={`text-xs font-medium px-2 py-0.5 rounded-full ${p.lateCount > 0 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>{p.lateCount > 0 ? `${p.lateCount}x` : '-'}</span></td>
+                                <td className="px-3 py-2.5 text-center"><span className={`text-xs font-medium px-2 py-0.5 rounded-full ${p.lemburHours > 0 ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'}`}>{p.lemburHours > 0 ? `${p.lemburHours} jam` : '-'}</span></td>
                                 <td className="px-3 py-2.5 text-center"><span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusColor}`}>{p.status}</span></td>
                               </tr>
                             );

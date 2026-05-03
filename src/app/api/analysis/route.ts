@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+// ============ CONSTANTS ============
+const WORK_START_MINUTES = 8 * 60; // 08:00 = 480 menit
+const OVERTIME_THRESHOLD_MINUTES = 15 * 60; // 15:00 = 900 menit (08:00 + 6jam + 1jam grace)
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const period = searchParams.get('period') || 'daily'; // daily, weekly, monthly
+    const period = searchParams.get('period') || 'daily';
     const unit = searchParams.get('unit') || 'SEMUA';
 
     const now = new Date();
@@ -17,7 +21,7 @@ export async function GET(request: NextRequest) {
       endDate.setHours(23, 59, 59, 999);
     } else if (period === 'weekly') {
       startDate = new Date(now);
-      const dayOfWeek = startDate.getDay() || 7; // Monday = 1
+      const dayOfWeek = startDate.getDay() || 7;
       startDate.setDate(startDate.getDate() - dayOfWeek + 1);
       startDate.setHours(0, 0, 0, 0);
       endDate.setHours(23, 59, 59, 999);
@@ -46,20 +50,112 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
-    // Summary stats
+    // ============ MATCH HADIR/PULANG PER PERSON PER DAY ============
+    interface PersonDayEntry {
+      namaLengkap: string;
+      dayKey: string;
+      hadirTime: Date | null;
+      pulangTime: Date | null;
+      unitKerja: string;
+      pesan: string | null;
+    }
+    const personDayMap = new Map<string, PersonDayEntry>();
+    allAttendance.forEach(a => {
+      const dayKey = new Date(a.createdAt).toLocaleDateString('id-ID');
+      const key = `${a.namaLengkap}__${dayKey}`;
+      if (!personDayMap.has(key)) {
+        personDayMap.set(key, { namaLengkap: a.namaLengkap, dayKey, hadirTime: null, pulangTime: null, unitKerja: a.unitKerja, pesan: null });
+      }
+      const entry = personDayMap.get(key)!;
+      entry.unitKerja = a.unitKerja;
+      if (a.type === 'HADIR') {
+        entry.hadirTime = new Date(a.createdAt);
+        if (a.pesan) entry.pesan = a.pesan;
+      } else {
+        entry.pulangTime = new Date(a.createdAt);
+      }
+    });
+
+    // ============ CALCULATE LATE & OVERTIME PER PERSON PER DAY ============
+    interface PersonLemburStats {
+      lemburHours: number;
+      lemburDays: number;
+      lateCount: number;
+      isOnTime: boolean;
+    }
+    const personLemburMap = new Map<string, PersonLemburStats>();
+
+    interface DayStats {
+      overtimePeople: Set<string>;
+      overtimeHours: number;
+      latePeople: Set<string>;
+    }
+    const dayOvertimeMap = new Map<string, DayStats>();
+
+    const lateNamesList: string[] = [];
+    const lemburRecords: { namaLengkap: string; date: string; hadirTime: string; pulangTime: string; lemburHours: number }[] = [];
+
+    personDayMap.forEach((entry) => {
+      if (!personLemburMap.has(entry.namaLengkap)) {
+        personLemburMap.set(entry.namaLengkap, { lemburHours: 0, lemburDays: 0, lateCount: 0, isOnTime: true });
+      }
+      const pStats = personLemburMap.get(entry.namaLengkap)!;
+
+      if (!dayOvertimeMap.has(entry.dayKey)) {
+        dayOvertimeMap.set(entry.dayKey, { overtimePeople: new Set(), overtimeHours: 0, latePeople: new Set() });
+      }
+      const dStats = dayOvertimeMap.get(entry.dayKey)!;
+
+      // Check late (hadir > 08:00)
+      if (entry.hadirTime) {
+        const hadirMinutes = entry.hadirTime.getHours() * 60 + entry.hadirTime.getMinutes();
+        if (hadirMinutes > WORK_START_MINUTES) {
+          pStats.lateCount++;
+          pStats.isOnTime = false;
+          dStats.latePeople.add(entry.namaLengkap);
+          lateNamesList.push(entry.namaLengkap);
+        }
+      }
+
+      // Check overtime: only if hadir <= 08:00 AND pulang >= 15:00
+      if (entry.hadirTime && entry.pulangTime) {
+        const hadirMinutes = entry.hadirTime.getHours() * 60 + entry.hadirTime.getMinutes();
+        const pulangMinutes = entry.pulangTime.getHours() * 60 + entry.pulangTime.getMinutes();
+
+        if (hadirMinutes <= WORK_START_MINUTES && pulangMinutes >= OVERTIME_THRESHOLD_MINUTES) {
+          const lemburHours = Math.floor((pulangMinutes - OVERTIME_THRESHOLD_MINUTES) / 60);
+          if (lemburHours >= 1) {
+            pStats.lemburHours += lemburHours;
+            pStats.lemburDays++;
+            dStats.overtimeHours += lemburHours;
+            dStats.overtimePeople.add(entry.namaLengkap);
+            lemburRecords.push({
+              namaLengkap: entry.namaLengkap,
+              date: entry.dayKey,
+              hadirTime: entry.hadirTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+              pulangTime: entry.pulangTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+              lemburHours,
+            });
+          }
+        }
+      }
+    });
+
+    // ============ SUMMARY STATS ============
     const hadirRecords = allAttendance.filter(a => a.type === 'HADIR');
     const pulangRecords = allAttendance.filter(a => a.type === 'PULANG');
     const uniqueNames = new Set(allAttendance.map(a => a.namaLengkap));
     const uniqueHadirNames = new Set(hadirRecords.map(a => a.namaLengkap));
     const uniquePulangNames = new Set(pulangRecords.map(a => a.namaLengkap));
 
-    // Late check-ins (after 08:00 WIB)
+    // Late stats (using minutes-based check)
     const lateCheckIns = hadirRecords.filter(a => {
-      const hour = new Date(a.createdAt).getHours();
-      return hour >= 8;
+      const minutes = new Date(a.createdAt).getHours() * 60 + new Date(a.createdAt).getMinutes();
+      return minutes > WORK_START_MINUTES;
     });
+    const uniqueLateNames = [...new Set(lateCheckIns.map(a => a.namaLengkap))];
 
-    // Peak hour analysis
+    // Peak hour
     const hourMap = new Map<number, number>();
     hadirRecords.forEach(a => {
       const hour = new Date(a.createdAt).getHours();
@@ -76,7 +172,15 @@ export async function GET(request: NextRequest) {
       ? Math.round((uniquePulangNames.size / uniqueHadirNames.size) * 100)
       : 0;
 
-    // Per-day breakdown with enhanced data
+    // Overtime totals
+    let totalOvertimeHours = 0;
+    let totalOvertimePeople = 0;
+    personLemburMap.forEach((stats) => {
+      totalOvertimeHours += stats.lemburHours;
+      if (stats.lemburDays > 0) totalOvertimePeople++;
+    });
+
+    // ============ PER-DAY BREAKDOWN ============
     const dayMap = new Map<string, { hadir: number; pulang: number; hadirNames: Set<string>; pulangNames: Set<string> }>();
     allAttendance.forEach(a => {
       const day = new Date(a.createdAt).toLocaleDateString('id-ID', {
@@ -98,10 +202,16 @@ export async function GET(request: NextRequest) {
       let status: 'Baik' | 'Cukup' | 'Perlu Perhatian' = 'Baik';
       if (dayCheckOutRate < 50) status = 'Perlu Perhatian';
       else if (dayCheckOutRate < 80) status = 'Cukup';
-      return { day, hadir: data.hadir, pulang: data.pulang, unique, checkOutRate: dayCheckOutRate, status };
+
+      const dayKey = new Date().toLocaleDateString('id-ID');
+      const dOvertime = dayOvertimeMap.get(day);
+      const lateCount = dOvertime ? dOvertime.latePeople.size : 0;
+      const overtimeHours = dOvertime ? dOvertime.overtimeHours : 0;
+
+      return { day, hadir: data.hadir, pulang: data.pulang, unique, checkOutRate: dayCheckOutRate, status, lateCount, overtimeHours };
     }).reverse();
 
-    // Per-unit breakdown with enhanced data
+    // ============ PER-UNIT BREAKDOWN ============
     const unitMap = new Map<string, { hadir: number; pulang: number; hadirNames: Set<string>; pulangNames: Set<string>; wfh: number; wfhNames: Set<string> }>();
     allAttendance.forEach(a => {
       if (!unitMap.has(a.unitKerja)) unitMap.set(a.unitKerja, { hadir: 0, pulang: 0, hadirNames: new Set(), pulangNames: new Set(), wfh: 0, wfhNames: new Set() });
@@ -129,10 +239,22 @@ export async function GET(request: NextRequest) {
       let status: 'Aktif' | 'Cukup' | 'Perlu Perhatian' = 'Aktif';
       if (activityRate < 30) status = 'Perlu Perhatian';
       else if (activityRate < 60) status = 'Cukup';
-      return { unitKerja, hadir: data.hadir, pulang: data.pulang, wfh: data.wfh, unique, checkOutRate: unitCheckOutRate, wfhRate, status };
+
+      // Late & overtime per unit
+      let unitLateCount = 0;
+      let unitOvertimeHours = 0;
+      personLemburMap.forEach((stats, name) => {
+        const personHasUnit = allAttendance.some(a => a.namaLengkap === name && a.unitKerja === unitKerja);
+        if (personHasUnit) {
+          unitLateCount += stats.lateCount;
+          unitOvertimeHours += stats.lemburHours;
+        }
+      });
+
+      return { unitKerja, hadir: data.hadir, pulang: data.pulang, wfh: data.wfh, unique, checkOutRate: unitCheckOutRate, wfhRate, status, lateCount: unitLateCount, overtimeHours: unitOvertimeHours };
     }).sort((a, b) => b.unique - a.unique);
 
-    // Per-person breakdown with status
+    // ============ PER-PERSON BREAKDOWN ============
     const personMap = new Map<string, { unitKerja: string; hadir: number; pulang: number; wfh: number; pesan: string[]; activeDays: Set<string> }>();
     allAttendance.forEach(a => {
       if (!personMap.has(a.namaLengkap)) personMap.set(a.namaLengkap, { unitKerja: a.unitKerja, hadir: 0, pulang: 0, wfh: 0, pesan: [], activeDays: new Set() });
@@ -161,55 +283,78 @@ export async function GET(request: NextRequest) {
       let status: 'Disiplin' | 'Cukup' | 'Perlu Perhatian' = 'Disiplin';
       if (consistency < 30) status = 'Perlu Perhatian';
       else if (consistency < 60) status = 'Cukup';
-      return { namaLengkap, unitKerja: data.unitKerja, hadir: data.hadir, pulang: data.pulang, wfh: data.wfh, total, activeDays: data.activeDays.size, pesan: data.pesan, status };
+
+      const lemburStats = personLemburMap.get(namaLengkap) || { lemburHours: 0, lemburDays: 0, lateCount: 0, isOnTime: true };
+
+      return {
+        namaLengkap,
+        unitKerja: data.unitKerja,
+        hadir: data.hadir,
+        pulang: data.pulang,
+        wfh: data.wfh,
+        total,
+        activeDays: data.activeDays.size,
+        pesan: data.pesan,
+        status,
+        lateCount: lemburStats.lateCount,
+        lemburHours: lemburStats.lemburHours,
+        isOnTime: lemburStats.isOnTime,
+      };
     }).sort((a, b) => b.total - a.total);
 
-    // Generate insights for leadership
+    // ============ INSIGHTS ============
     const insights: string[] = [];
 
-    // Insight 1: Check-out rate
+    // Insight: Check-out rate
     if (checkOutRate < 50) {
-      insights.push(`Tingkat kelengkapan absensi pulang hanya ${checkOutRate}%. Perlu diingatkan kepada pegawai untuk melakukan absensi pulang.`);
+      insights.push(`Tingkat kelengkapan absensi pulang hanya ${checkOutRate}%. Perlu diingatkan kepada pegawai untuk absensi pulang.`);
     } else if (checkOutRate < 80) {
-      insights.push(`Tingkat kelengkapan absensi pulang ${checkOutRate}%. Masih ada ${uniqueHadirNames.size - uniquePulangNames.size} pegawai yang belum konsisten absensi pulang.`);
+      insights.push(`Tingkat kelengkapan absensi pulang ${checkOutRate}%. Masih ${uniqueHadirNames.size - uniquePulangNames.size} pegawai belum konsisten absensi pulang.`);
     } else {
-      insights.push(`Tingkat kelengkapan absensi pulang baik (${checkOutRate}%). Pegawai sudah disiplin melakukan absensi pulang.`);
+      insights.push(`Tingkat kelengkapan absensi pulang baik (${checkOutRate}%).`);
     }
 
-    // Insight 2: Late check-ins
-    if (lateCheckIns.length > 0) {
-      const lateNames = [...new Set(lateCheckIns.map(a => a.namaLengkap))];
-      insights.push(`${lateNames.length} pegawai terdeteksi hadir setelah pukul 08:00 (${lateCheckIns.length} kali).`);
+    // Insight: Late
+    if (uniqueLateNames.length > 0) {
+      const lateCountMsg = lateCheckIns.length;
+      insights.push(`${uniqueLateNames.length} pegawai terdeteksi TERLAMBAT (hadir > 08:00) sebanyak ${lateCountMsg} kali: ${uniqueLateNames.slice(0, 10).join(', ')}${uniqueLateNames.length > 10 ? ' dan lainnya' : ''}. Pegawai terlambat tidak mendapatkan hak lembur.`);
+    } else if (hadirRecords.length > 0) {
+      insights.push(`Tidak ada pegawai yang terlambat. Semua hadir tepat waktu (sebelum/tepat 08:00).`);
     }
 
-    // Insight 3: Peak hour
+    // Insight: Overtime
+    if (totalOvertimeHours > 0) {
+      insights.push(`Total lembur: ${totalOvertimeHours} jam dari ${totalOvertimePeople} pegawai. Syarat lembur: hadir sebelum/tepat 08:00 dan pulang minimal 15:00 (grace 1 jam setelah jam kerja 08:00-14:00).`);
+    } else if (hadirRecords.length > 0 && pulangRecords.length > 0) {
+      insights.push(`Tidak ada lembur tercatat pada periode ini.`);
+    }
+
+    // Insight: Peak hour
     if (peakHourCount > 0) {
       insights.push(`Jam puncak kehadiran: pukul ${peakHour.toString().padStart(2, '0')}:00 dengan ${peakHourCount} kali absensi hadir.`);
     }
 
-    // Insight 4: WFH
+    // Insight: WFH
     if (allWFH.length > 0) {
       const wfhUnits = [...new Set(allWFH.map(w => w.unitKerja))];
       insights.push(`Terdapat ${allWFH.length} aktivitas WFH dari ${wfhUnits.length} unit kerja.`);
     }
 
-    // Insight 5: Most active unit
+    // Insight: Most/least active unit
     if (unitBreakdown.length > 0) {
       insights.push(`Unit kerja paling aktif: ${unitBreakdown[0].unitKerja} (${unitBreakdown[0].unique} pegawai).`);
     }
-
-    // Insight 6: Least active unit
     if (unitBreakdown.length > 1) {
       const least = unitBreakdown[unitBreakdown.length - 1];
       insights.push(`Unit kerja dengan partisipasi terendah: ${least.unitKerja} (${least.unique} pegawai).`);
     }
 
-    // Insight 7: Per-person
+    // Insight: Most active person
     if (personBreakdown.length > 0) {
       insights.push(`Pegawai paling aktif: ${personBreakdown[0].namaLengkap} (${personBreakdown[0].total} aktivitas, ${personBreakdown[0].activeDays} hari).`);
     }
 
-    // Period label
+    // ============ PERIOD LABEL ============
     let periodLabel = '';
     if (period === 'daily') {
       periodLabel = now.toLocaleDateString('id-ID', {
@@ -239,14 +384,18 @@ export async function GET(request: NextRequest) {
           totalRecords: allAttendance.length,
           checkOutRate,
           lateCheckIns: lateCheckIns.length,
-          latePeople: [...new Set(lateCheckIns.map(a => a.namaLengkap))].length,
+          latePeople: uniqueLateNames.length,
+          lateNames: uniqueLateNames,
           peakHour,
           peakHourCount,
+          totalOvertimeHours,
+          totalOvertimePeople,
         },
         insights,
         dailyBreakdown,
         unitBreakdown,
         personBreakdown,
+        lemburRecords,
         attendanceRecords: allAttendance,
         wfhRecords: allWFH,
       },
