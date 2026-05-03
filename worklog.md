@@ -1,27 +1,23 @@
 ---
-Task ID: 1
+Task ID: 2
 Agent: Main Agent
-Task: Build Sistem Presensi Digital Universitas Tulungagung
+Task: Fix CSV Export, Add Analisa Tab with Harian/Mingguan/Bulanan, Add PDF Export
 
 Work Log:
-- Analyzed requirements: attendance system with presensi, WFH, and laporan modules
-- Initialized fullstack dev environment (Next.js 16 + Prisma + SQLite)
-- Copied uploaded university logo to /public/logo-universitas.png
-- Designed and pushed Prisma schema (Attendance + WFHActivity models)
-- Created API routes: /api/attendance (GET/POST), /api/wfh (GET/POST), /api/stats (GET), /api/attendance/delete (DELETE)
-- Built complete single-page UI with 3 tabs: Presensi, Aktivitas WFH, Laporan
-- Implemented dark blue (biru dongker) parallax theme with liquid glass Apple-style effects
-- Added floating particles, shimmer text, glassmorphism cards, and glow button effects
-- Implemented photo upload with client-side compression (base64, max 800px, JPEG 70%)
-- Added attendance form with: Nama Lengkap (no title), Unit Kerja (18 units), optional Pesan, selfie upload
-- Added WFH form with: Nama, Unit Kerja, Deskripsi Pekerjaan
-- Built Laporan with filters (date, unit, type, search), data tables, photo viewer modal, CSV export, delete
-- Real-time clock display, statistics dashboard cards
+- Analyzed CSV export issue: missing BOM for UTF-8 compatibility and unreliable download trigger
+- Fixed CSV export: added BOM (\uFEFF), proper downloadFile() function with DOM append/cleanup
+- Installed jspdf for PDF generation
+- Created /api/analysis endpoint with period support (daily/weekly/monthly) and unit filter
+- Analysis API returns: summary stats, daily breakdown, per-unit breakdown, per-person breakdown
+- Added "Analisa" tab in main navigation next to "Laporan"
+- Analysis tab features: period selector (Harian/Mingguan/Bulanan), unit filter, 3 sub-tabs
+- Sub-tabs: Ringkasan (daily breakdown with bar visualization), Per Unit (with bar visualization), Per Orang
+- Implemented PDF export using jsPDF (landscape A4) with full analysis report
+- PDF includes: header, summary, unit breakdown table, daily breakdown table, person breakdown with pesan
 - All linting passes, dev server running successfully
 
 Stage Summary:
-- Complete attendance system deployed at localhost:3000
-- Database: SQLite with Prisma ORM (safe for photos stored as base64 in DB)
-- Theme: Biru dongker with parallax floating particles + liquid glass Apple UI
-- Features: Presensi (Hadir/Pulang), WFH Activity, Laporan with filters & CSV export
-- Ready for Vercel deployment (note: for production, switch SQLite to PostgreSQL/MySQL)
+- CSV Export: Fixed with BOM + proper Blob download
+- New Analisa tab with 3 period types and 3 view modes
+- PDF export generates professional landscape report
+- Analysis API at /api/analysis supports daily/weekly/monthly aggregation
