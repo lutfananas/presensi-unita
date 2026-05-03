@@ -1073,7 +1073,18 @@ export default function PresensiPage() {
                               </td>
                               <td className="hidden lg:table-cell max-w-[200px]"><span className="text-xs text-[#86868b] line-clamp-2">{r.pesan || "-"}</span></td>
                               <td className="hidden xl:table-cell">
-                                {r.locationAddress ? (
+                                {r.locationAddress && r.latitude && r.longitude ? (
+                                  <a
+                                    href={`https://www.google.com/maps?q=${r.latitude},${r.longitude}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs flex items-center gap-1 transition-colors hover:opacity-80"
+                                    style={{ color: "#2997ff" }}
+                                  >
+                                    <MapPin className="w-3 h-3 flex-shrink-0" />
+                                    <span className="truncate max-w-[150px]">{r.locationAddress.split(',')[0]}</span>
+                                  </a>
+                                ) : r.locationAddress ? (
                                   <span className="text-xs flex items-center gap-1" style={{ color: "#2997ff" }}>
                                     <MapPin className="w-3 h-3 flex-shrink-0" />
                                     <span className="truncate max-w-[150px]">{r.locationAddress.split(',')[0]}</span>
