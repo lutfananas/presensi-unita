@@ -627,8 +627,8 @@ export default function PresensiPage() {
           </div>
         </div>
       </nav>
-      {/* Bottom mobile navigation bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 mobile-bottom-nav" style={{ background: "rgba(0, 0, 0, 0.85)", backdropFilter: "saturate(180%) blur(20px)", WebkitBackdropFilter: "saturate(180%) blur(20px)", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "6px" }}>
+      {/* Bottom mobile navigation bar - SOLID bg, no blur (iOS safe) */}
+      <div className="md:hidden mobile-bottom-nav">
         <div className="flex items-center justify-around px-1">
           {([
             { id: "presensi" as TabType, label: "Presensi", icon: ClipboardList },
@@ -1437,7 +1437,7 @@ export default function PresensiPage() {
 
       {/* ===== Photo Modal ===== */}
       {selectedPhoto && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }} onClick={() => setSelectedPhoto(null)}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.9)" }} onClick={() => setSelectedPhoto(null)}>
           <div className="relative max-w-lg w-full rounded-2xl p-2 animate-fade-in-up" style={{ background: "rgba(29,29,31,0.9)", border: "1px solid rgba(255,255,255,0.1)" }} onClick={(e) => e.stopPropagation()}>
             <button onClick={() => setSelectedPhoto(null)} className="absolute -top-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center transition-colors z-10" style={{ background: "#ff453a" }}>
               <X className="w-4 h-4 text-white" />
