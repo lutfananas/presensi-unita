@@ -27,6 +27,8 @@ import {
   FileText,
   TrendingUp,
   PieChart,
+  MapPin,
+  Loader2,
 } from "lucide-react";
 import jsPDF from "jspdf";
 
@@ -62,6 +64,9 @@ interface AttendanceRecord {
   type: string;
   pesan: string | null;
   photoData: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  locationAddress: string | null;
   createdAt: string;
 }
 
@@ -104,6 +109,8 @@ export default function PresensiPage() {
   const [pesan, setPesan] = useState("");
   const [photoData, setPhotoData] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [geoLocation, setGeoLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
 
   // WFH Form State
   const [wfhNama, setWfhNama] = useState("");
@@ -204,7 +211,114 @@ export default function PresensiPage() {
     if (activeTab === "analisa") fetchAnalysisData();
   }, [activeTab, fetchAnalysisData]);
 
+  // ============ GEOLOCATION ============
+  const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+        headers: { 'Accept-Language': 'id' },
+      });
+      const data = await res.json();
+      if (data.display_name) {
+        const parts = data.display_name.split(',').slice(0, 3).join(', ');
+        return parts;
+      }
+      return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    } catch {
+      return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    }
+  };
+
+  const requestGeoLocation = async (): Promise<{ lat: number; lng: number; address: string } | null> => {
+    if (!navigator.geolocation) {
+      toast({ title: "GPS tidak didukung browser ini", variant: "destructive" });
+      return null;
+    }
+    setIsGettingLocation(true);
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          const address = await reverseGeocode(lat, lng);
+          setIsGettingLocation(false);
+          resolve({ lat, lng, address });
+        },
+        (error) => {
+          setIsGettingLocation(false);
+          switch (error.code) {
+            case 1: toast({ title: "Izin lokasi ditolak", description: "Aktifkan izin lokasi di browser untuk menggunakan fitur geotag", variant: "destructive" }); break;
+            case 2: toast({ title: "Lokasi tidak tersedia", description: "Pastikan GPS perangkat aktif", variant: "destructive" }); break;
+            case 3: toast({ title: "Timeout lokasi", description: "Coba lagi, tidak dapat menemukan lokasi", variant: "destructive" }); break;
+          }
+          resolve(null);
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      );
+    });
+  };
+
   // ============ PHOTO HANDLING ============
+  const drawGeoTagOverlay = (img: HTMLImageElement): string => {
+    const canvas = document.createElement("canvas");
+    const maxW = 800, maxH = 1000;
+    let w = img.width, h = img.height;
+
+    if (w > maxW) { h = (h * maxW) / w; w = maxW; }
+    if (h > maxH) { w = (w * maxH) / h; h = maxH; }
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext("2d")!;
+
+    // Draw original photo
+    ctx.drawImage(img, 0, 0, w, h);
+
+    if (!geoLocation) return canvas.toDataURL("image/jpeg", 0.85);
+
+    // Overlay bar at bottom
+    const barH = Math.max(h * 0.1, 60);
+    const barY = h - barH;
+    ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+    ctx.fillRect(0, barY, w, barH);
+
+    // Timestamp
+    const now = new Date();
+    const timeStr = now.toLocaleString("id-ID", {
+      weekday: "long", day: "2-digit", month: "long", year: "numeric",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+    });
+    ctx.fillStyle = "#ffffff";
+    ctx.font = `bold ${Math.max(barH * 0.22, 11)}px monospace`;
+    ctx.textBaseline = "middle";
+    ctx.fillText(timeStr, 10, barY + barH * 0.35);
+
+    // Location icon + address
+    const fontSize = Math.max(barH * 0.17, 9);
+    ctx.font = `${fontSize}px monospace`;
+    const addressText = geoLocation.address;
+    const maxTextWidth = w - 20;
+    let displayText = addressText;
+    if (ctx.measureText(displayText).width > maxTextWidth) {
+      while (ctx.measureText(displayText + "...").width > maxTextWidth && displayText.length > 0) {
+        displayText = displayText.slice(0, -1);
+      }
+      displayText += "...";
+    }
+    ctx.fillStyle = "#4fc3f7";
+    ctx.fillText("📍 " + displayText, 10, barY + barH * 0.7);
+
+    // Coordinates on the right
+    ctx.fillStyle = "#81c784";
+    ctx.font = `bold ${Math.max(barH * 0.15, 8)}px monospace`;
+    const coordText = `${geoLocation.lat.toFixed(5)}, ${geoLocation.lng.toFixed(5)}`;
+    const coordWidth = ctx.measureText(coordText).width;
+    ctx.fillText(coordText, w - coordWidth - 10, barY + barH * 0.7);
+
+    // Green border top of bar
+    ctx.fillStyle = "#4caf50";
+    ctx.fillRect(0, barY, w, 2);
+
+    return canvas.toDataURL("image/jpeg", 0.85);
+  };
+
   const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -221,14 +335,18 @@ export default function PresensiPage() {
       const result = event.target?.result as string;
       const img = new window.Image();
       img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const maxW = 800, maxH = 800;
-        let w = img.width, h = img.height;
-        if (w > maxW) { h = (h * maxW) / w; w = maxW; }
-        if (h > maxH) { w = (w * maxH) / h; h = maxH; }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext("2d")?.drawImage(img, 0, 0, w, h);
-        setPhotoData(canvas.toDataURL("image/jpeg", 0.7));
+        // Use geotag overlay if location is available
+        const processedData = geoLocation ? drawGeoTagOverlay(img) : (() => {
+          const canvas = document.createElement("canvas");
+          const maxW = 800, maxH = 800;
+          let w = img.width, h = img.height;
+          if (w > maxW) { h = (h * maxW) / w; w = maxW; }
+          if (h > maxH) { w = (w * maxH) / h; h = maxH; }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext("2d")?.drawImage(img, 0, 0, w, h);
+          return canvas.toDataURL("image/jpeg", 0.7);
+        })();
+        setPhotoData(processedData);
       };
       img.src = result;
     };
@@ -244,12 +362,12 @@ export default function PresensiPage() {
       const res = await fetch("/api/attendance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ namaLengkap: namaLengkap.trim(), unitKerja, type, pesan: pesan.trim() || null, photoData }),
+        body: JSON.stringify({ namaLengkap: namaLengkap.trim(), unitKerja, type, pesan: pesan.trim() || null, photoData, latitude: geoLocation?.lat ?? null, longitude: geoLocation?.lng ?? null, locationAddress: geoLocation?.address ?? null }),
       });
       const json = await res.json();
       if (json.success) {
         toast({ title: `${type === "HADIR" ? "Absensi Hadir" : "Absensi Pulang"} berhasil!`, description: `Data untuk ${namaLengkap.trim()} telah tersimpan` });
-        setNamaLengkap(""); setUnitKerja(""); setPesan(""); setPhotoData(null);
+        setNamaLengkap(""); setUnitKerja(""); setPesan(""); setPhotoData(null); setGeoLocation(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
         fetchStats();
       } else { toast({ title: "Gagal menyimpan", variant: "destructive" }); }
@@ -569,15 +687,36 @@ export default function PresensiPage() {
                   <textarea value={pesan} onChange={(e) => setPesan(e.target.value)} placeholder="Contoh: Terlambat karena praktikum jam 12, izin pulang awal karena sakit, dll." rows={3} className="w-full px-4 py-3 rounded-xl liquid-glass-input text-white placeholder:text-[#5c6bc0]/50 text-sm resize-none" />
                 </div>
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-[#c5cae9] mb-2"><Camera className="w-4 h-4" />Foto Selfie</label>
+                  <label className="flex items-center gap-2 text-sm font-medium text-[#c5cae9] mb-2"><Camera className="w-4 h-4" />Foto Selfie Geotag</label>
+                  {/* GeoTag Status & Button */}
+                  <div className="mb-3">
+                    {geoLocation ? (
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/30">
+                        <MapPin className="w-4 h-4 text-green-400 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-green-400">Lokasi aktif</p>
+                          <p className="text-xs text-[#9fa8da] truncate">{geoLocation.address}</p>
+                        </div>
+                        <button onClick={() => setGeoLocation(null)} className="text-[#5c6bc0] hover:text-red-400 transition-colors flex-shrink-0"><X className="w-3.5 h-3.5" /></button>
+                      </div>
+                    ) : (
+                      <button onClick={async () => { const loc = await requestGeoLocation(); if (loc) setGeoLocation(loc); }} disabled={isGettingLocation} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-[#42a5f5]/40 hover:border-[#42a5f5]/60 hover:bg-[#1a237e]/20 transition-all w-full text-left">
+                        {isGettingLocation ? <Loader2 className="w-4 h-4 text-[#42a5f5] animate-spin" /> : <MapPin className="w-4 h-4 text-[#42a5f5]" />}
+                        <div className="flex-1">
+                          <p className="text-xs font-medium text-[#64b5f6]">{isGettingLocation ? "Mencari lokasi GPS..." : "Aktifkan Lokasi (GeoTag)"}</p>
+                          <p className="text-xs text-[#5c6bc0]">{isGettingLocation ? "Mohon tunggu..." : "Foto akan dilengkapi timestamp & lokasi otomatis"}</p>
+                        </div>
+                      </button>
+                    )}
+                  </div>
                   <div onClick={() => fileInputRef.current?.click()} className="relative border-2 border-dashed border-[#3f51b5]/40 rounded-xl p-6 text-center cursor-pointer hover:border-[#5c6bc0]/60 transition-all duration-300 hover:bg-[#1a237e]/20 group">
                     {photoData ? (
-                      <div className="photo-preview-container mx-auto w-40 h-40 mb-3"><img src={photoData} alt="Preview" className="w-full h-full object-cover rounded-xl" /></div>
+                      <div className="photo-preview-container mx-auto w-40 h-52 mb-3 relative"><img src={photoData} alt="Preview" className="w-full h-full object-cover rounded-xl" /><div className="absolute bottom-0 left-0 right-0 bg-black/50 text-center py-1 rounded-b-xl"><p className="text-[10px] text-green-400 font-medium">📷 GeoTag Aktif</p></div></div>
                     ) : (
                       <div className="flex flex-col items-center gap-2">
                         <div className="w-16 h-16 rounded-full bg-[#1a237e]/40 flex items-center justify-center group-hover:bg-[#1a237e]/60 transition-all"><Camera className="w-8 h-8 text-[#7986cb]" /></div>
                         <p className="text-sm text-[#9fa8da]">Klik untuk ambil/Upload foto selfie</p>
-                        <p className="text-xs text-[#5c6bc0]">JPG/PNG, maks 5MB</p>
+                        <p className="text-xs text-[#5c6bc0]">{geoLocation ? "Foto akan dilengkapi GeoTag (waktu & lokasi)" : "Aktifkan lokasi di atas untuk GeoTag"}</p>
                       </div>
                     )}
                     {photoData && (<button onClick={(e) => { e.stopPropagation(); setPhotoData(null); if (fileInputRef.current) fileInputRef.current.value = ""; }} className="absolute top-2 right-2 w-7 h-7 rounded-full bg-red-500/80 flex items-center justify-center hover:bg-red-500 transition-colors z-10"><X className="w-4 h-4 text-white" /></button>)}
@@ -665,7 +804,7 @@ export default function PresensiPage() {
                 {isLoadingData ? (<div className="p-12 text-center text-[#9fa8da]"><div className="animate-spin w-8 h-8 border-2 border-[#3f51b5] border-t-transparent rounded-full mx-auto mb-3" /><p className="text-sm">Memuat data...</p></div>) : attendanceData.length === 0 ? (<div className="p-12 text-center text-[#9fa8da]"><ClipboardList className="w-12 h-12 mx-auto mb-3 opacity-30" /><p className="text-sm">Belum ada data absensi</p></div>) : (
                   <div className="overflow-x-auto custom-scrollbar max-h-[70vh] overflow-y-auto">
                     <table className="w-full data-table text-sm">
-                      <thead><tr className="text-left text-xs uppercase tracking-wider text-[#9fa8da]"><th className="px-4 py-3 font-medium">Waktu</th><th className="px-4 py-3 font-medium">Nama</th><th className="px-4 py-3 font-medium hidden md:table-cell">Unit Kerja</th><th className="px-4 py-3 font-medium">Tipe</th><th className="px-4 py-3 font-medium hidden lg:table-cell">Pesan</th><th className="px-4 py-3 font-medium text-center">Foto</th><th className="px-4 py-3 font-medium text-center">Aksi</th></tr></thead>
+                      <thead><tr className="text-left text-xs uppercase tracking-wider text-[#9fa8da]"><th className="px-4 py-3 font-medium">Waktu</th><th className="px-4 py-3 font-medium">Nama</th><th className="px-4 py-3 font-medium hidden md:table-cell">Unit Kerja</th><th className="px-4 py-3 font-medium">Tipe</th><th className="px-4 py-3 font-medium hidden lg:table-cell">Pesan</th><th className="px-4 py-3 font-medium hidden xl:table-cell">Lokasi</th><th className="px-4 py-3 font-medium text-center">Foto</th><th className="px-4 py-3 font-medium text-center">Aksi</th></tr></thead>
                       <tbody className="divide-y divide-white/5">{attendanceData.map((r) => (
                         <tr key={r.id} className="text-[#c5cae9]">
                           <td className="px-4 py-3 whitespace-nowrap text-xs">{formatDateTime(r.createdAt)}</td>
@@ -673,6 +812,7 @@ export default function PresensiPage() {
                           <td className="px-4 py-3 hidden md:table-cell text-xs">{r.unitKerja}</td>
                           <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${r.type === "HADIR" ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}>{r.type === "HADIR" ? <LogIn className="w-3 h-3" /> : <LogOut className="w-3 h-3" />}{r.type}</span></td>
                           <td className="px-4 py-3 hidden lg:table-cell max-w-[200px]"><span className="text-xs text-[#9fa8da] line-clamp-2">{r.pesan || "-"}</span></td>
+                          <td className="px-4 py-3 hidden xl:table-cell">{r.locationAddress ? (<span className="text-xs text-[#64b5f6] flex items-center gap-1"><MapPin className="w-3 h-3 flex-shrink-0" /><span className="truncate max-w-[150px]">{r.locationAddress.split(',')[0]}</span></span>) : (<span className="text-xs text-[#5c6bc0]/50">-</span>)}</td>
                           <td className="px-4 py-3 text-center">{r.photoData ? (<button onClick={() => setSelectedPhoto(r.photoData)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[#1a237e]/40 hover:bg-[#1a237e]/60 transition-colors"><Eye className="w-4 h-4 text-[#7986cb]" /></button>) : (<span className="text-xs text-[#5c6bc0]/50">-</span>)}</td>
                           <td className="px-4 py-3 text-center"><button onClick={() => handleDeleteRecord(r.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-colors"><Trash2 className="w-4 h-4 text-red-400" /></button></td>
                         </tr>

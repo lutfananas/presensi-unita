@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { namaLengkap, unitKerja, type, pesan, photoData } = body;
+    const { namaLengkap, unitKerja, type, pesan, photoData, latitude, longitude, locationAddress } = body;
 
     if (!namaLengkap || !unitKerja || !type) {
       return NextResponse.json(
@@ -27,6 +27,9 @@ export async function POST(request: NextRequest) {
         type,
         pesan: pesan?.trim() || null,
         photoData: photoData || null,
+        latitude: latitude ?? null,
+        longitude: longitude ?? null,
+        locationAddress: locationAddress?.trim() || null,
       },
     });
 
