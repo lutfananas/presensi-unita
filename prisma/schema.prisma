@@ -13,6 +13,7 @@ model Attendance {
   namaLengkap String
   unitKerja   String
   type        String
+  jenisKehadiran String @default("Masuk Kerja Kampus")
   pesan       String?
   photoPath   String?
   photoData   String?

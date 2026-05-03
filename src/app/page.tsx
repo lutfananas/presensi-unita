@@ -17,6 +17,7 @@ import {
   Search,
   Download,
   ChevronDown,
+  ClipboardCheck,
   Activity,
   Building2,
   User,
@@ -62,6 +63,7 @@ interface AttendanceRecord {
   namaLengkap: string;
   unitKerja: string;
   type: string;
+  jenisKehadiran: string;
   pesan: string | null;
   photoData: string | null;
   latitude: number | null;
@@ -106,6 +108,7 @@ export default function PresensiPage() {
   // Attendance Form State
   const [namaLengkap, setNamaLengkap] = useState("");
   const [unitKerja, setUnitKerja] = useState("");
+  const [jenisKehadiran, setJenisKehadiran] = useState("");
   const [pesan, setPesan] = useState("");
   const [photoData, setPhotoData] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -357,17 +360,18 @@ export default function PresensiPage() {
   const handleSubmitAttendance = async (type: "HADIR" | "PULANG") => {
     if (!namaLengkap.trim()) { toast({ title: "Nama wajib diisi", variant: "destructive" }); return; }
     if (!unitKerja) { toast({ title: "Unit kerja wajib dipilih", variant: "destructive" }); return; }
+    if (!jenisKehadiran) { toast({ title: "Jenis kehadiran wajib dipilih", variant: "destructive" }); return; }
     setIsSubmitting(true);
     try {
       const res = await fetch("/api/attendance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ namaLengkap: namaLengkap.trim(), unitKerja, type, pesan: pesan.trim() || null, photoData, latitude: geoLocation?.lat ?? null, longitude: geoLocation?.lng ?? null, locationAddress: geoLocation?.address ?? null }),
+        body: JSON.stringify({ namaLengkap: namaLengkap.trim(), unitKerja, type, jenisKehadiran, pesan: pesan.trim() || null, photoData, latitude: geoLocation?.lat ?? null, longitude: geoLocation?.lng ?? null, locationAddress: geoLocation?.address ?? null }),
       });
       const json = await res.json();
       if (json.success) {
         toast({ title: `${type === "HADIR" ? "Absensi Hadir" : "Absensi Pulang"} berhasil!`, description: `Data untuk ${namaLengkap.trim()} telah tersimpan` });
-        setNamaLengkap(""); setUnitKerja(""); setPesan(""); setPhotoData(null); setGeoLocation(null);
+        setNamaLengkap(""); setUnitKerja(""); setJenisKehadiran(""); setPesan(""); setPhotoData(null); setGeoLocation(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
         fetchStats();
       } else { toast({ title: json.error || "Gagal menyimpan", variant: "destructive" }); }
@@ -423,8 +427,8 @@ export default function PresensiPage() {
   };
 
   const generateAttendanceCSV = (data: AttendanceRecord[]) => {
-    const headers = ["Waktu", "Nama Lengkap", "Unit Kerja", "Tipe", "Pesan"];
-    const rows = data.map(r => [formatDateTime(r.createdAt), r.namaLengkap, r.unitKerja, r.type, r.pesan || "-"]);
+    const headers = ["Waktu", "Nama Lengkap", "Unit Kerja", "Tipe", "Jenis Kehadiran", "Pesan"];
+    const rows = data.map(r => [formatDateTime(r.createdAt), r.namaLengkap, r.unitKerja, r.type, r.jenisKehadiran || "Masuk Kerja Kampus", r.pesan || "-"]);
     return [headers, ...rows].map(row => row.map(escapeCSV).join(",")).join("\r\n");
   };
 
@@ -739,6 +743,22 @@ export default function PresensiPage() {
                     </div>
                   </div>
 
+                  {/* Jenis Kehadiran */}
+                  <div>
+                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#86868b] font-medium mb-3">
+                      <ClipboardCheck className="w-3.5 h-3.5" />
+                      Jenis Kehadiran <span style={{ color: "#ff453a" }}>*</span>
+                    </label>
+                    <div className="relative">
+                      <select value={jenisKehadiran} onChange={(e) => setJenisKehadiran(e.target.value)} className="apple-select">
+                        <option value="" style={{ background: "#1c1c1e", color: "#86868b" }}>-- Pilih Jenis Kehadiran --</option>
+                        <option value="Masuk Kerja Kampus" style={{ background: "#1c1c1e" }}>Masuk Kerja Kampus</option>
+                        <option value="Dinas Luar Kampus (Penelitian dan Pengabdian)" style={{ background: "#1c1c1e" }}>Dinas Luar Kampus (Penelitian dan Pengabdian)</option>
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868b] pointer-events-none" />
+                    </div>
+                  </div>
+
                   {/* Pesan */}
                   <div>
                     <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#86868b] font-medium mb-3">
@@ -984,6 +1004,7 @@ export default function PresensiPage() {
                             <th>Nama</th>
                             <th className="hidden md:table-cell">Unit Kerja</th>
                             <th>Tipe</th>
+                            <th className="hidden lg:table-cell">Jenis Kehadiran</th>
                             <th className="hidden lg:table-cell">Pesan</th>
                             <th className="hidden xl:table-cell">Lokasi</th>
                             <th className="text-center">Foto</th>
@@ -999,6 +1020,11 @@ export default function PresensiPage() {
                               <td>
                                 <span className={`apple-badge ${r.type === "HADIR" ? "bg-[#30d158]/15 text-[#30d158]" : "bg-[#ff453a]/15 text-[#ff453a]"}`}>
                                   {r.type === "HADIR" ? <LogIn className="w-3 h-3 mr-1" /> : <LogOut className="w-3 h-3 mr-1" />}{r.type}
+                                </span>
+                              </td>
+                              <td className="hidden lg:table-cell">
+                                <span className={`apple-badge ${r.jenisKehadiran && r.jenisKehadiran.includes('Dinas') ? "bg-[#ff9f0a]/15 text-[#ff9f0a]" : "bg-[#2997ff]/15 text-[#2997ff]"}`}>
+                                  {r.jenisKehadiran || "Masuk Kerja Kampus"}
                                 </span>
                               </td>
                               <td className="hidden lg:table-cell max-w-[200px]"><span className="text-xs text-[#86868b] line-clamp-2">{r.pesan || "-"}</span></td>
