@@ -2,39 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
 // ============ GEOFENCING CONFIG ============
-// Koordinat pusat kampus Universitas Tulungagung
 const CAMPUS_CENTER = {
   lat: -8.0903366,
   lng: 111.9003307,
 };
+const CAMPUS_RADIUS_METERS = 500;
 
-// Radius yang diizinkan (dalam meter) - 500 meter dari pusat kampus
-const ALLOWED_RADIUS_METERS = 500;
-
-// Apakah geofencing aktif (bisa di-toggle)
-const GEOFENCING_ENABLED = true;
-
-/**
- * Menghitung jarak antara dua titik koordinat menggunakan rumus Haversine
- * @returns jarak dalam meter
- */
 function haversineDistance(
   lat1: number, lon1: number,
   lat2: number, lon2: number
 ): number {
-  const R = 6371000; // Radius bumi dalam meter
+  const R = 6371000;
   const toRad = (deg: number) => (deg * Math.PI) / 180;
-
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
-
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 export async function POST(request: NextRequest) {
@@ -56,33 +42,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ============ GEOFENCING VALIDATION ============
-    // Untuk jenis "Masuk Kerja Kampus", wajib berada di area kampus
-    const jenisKehadiranValue = jenisKehadiran?.trim() || "Masuk Kerja Kampus";
-    const isKampus = jenisKehadiranValue.includes("Kampus");
+    // ============ GEOFENCE STATUS (tidak blokir, hanya catat) ============
+    let distanceFromCampus: number | null = null;
+    let geoVerified = false;
 
-    if (GEOFENCING_ENABLED && isKampus && latitude && longitude) {
-      const distance = haversineDistance(
-        latitude, longitude,
-        CAMPUS_CENTER.lat, CAMPUS_CENTER.lng
+    if (latitude && longitude) {
+      distanceFromCampus = Math.round(
+        haversineDistance(latitude, longitude, CAMPUS_CENTER.lat, CAMPUS_CENTER.lng)
       );
-
-      if (distance > ALLOWED_RADIUS_METERS) {
-        // Lokasi di luar area kampus
-        return NextResponse.json(
-          {
-            error: `Lokasi Anda berada di luar area kampus (${Math.round(distance)}m dari kampus). Absensi Masuk Kerja Kampus hanya diizinkan dalam radius ${ALLOWED_RADIUS_METERS}m dari Universitas Tulungagung.`
-          },
-          { status: 403 }
-        );
-      }
-    } else if (GEOFENCING_ENABLED && isKampus && (!latitude || !longitude)) {
-      return NextResponse.json(
-        {
-          error: 'Absensi Masuk Kerja Kampus wajib mengaktifkan lokasi GPS. Silakan aktifkan lokasi lalu ambil foto untuk melanjutkan.'
-        },
-        { status: 403 }
-      );
+      const jenisKehadiranValue = jenisKehadiran?.trim() || "Masuk Kerja Kampus";
+      const isKampus = jenisKehadiranValue.includes("Kampus");
+      geoVerified = isKampus ? distanceFromCampus <= CAMPUS_RADIUS_METERS : true;
     }
 
     // Cegah duplikat: cek apakah nama sudah absen dengan tipe yang sama hari ini (case-insensitive)
@@ -125,7 +95,15 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true, data: attendance });
+    return NextResponse.json({
+      success: true,
+      data: attendance,
+      geoInfo: distanceFromCampus !== null ? {
+        distanceFromCampus,
+        campusRadius: CAMPUS_RADIUS_METERS,
+        geoVerified,
+      } : null,
+    });
   } catch (error) {
     console.error('Error creating attendance:', error);
     return NextResponse.json(
@@ -175,7 +153,28 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json({ success: true, data: attendance });
+    // Calculate geofence distance for each record (server-side enrichment)
+    const enrichedData = attendance.map((record) => {
+      if (record.latitude && record.longitude) {
+        const dist = Math.round(
+          haversineDistance(record.latitude, record.longitude, CAMPUS_CENTER.lat, CAMPUS_CENTER.lng)
+        );
+        const isKampus = record.jenisKehadiran?.includes("Kampus") ?? true;
+        const geoVerified = isKampus ? dist <= CAMPUS_RADIUS_METERS : true;
+        return {
+          ...record,
+          _distanceFromCampus: dist,
+          _geoVerified: geoVerified,
+        };
+      }
+      return {
+        ...record,
+        _distanceFromCampus: null,
+        _geoVerified: null,
+      };
+    });
+
+    return NextResponse.json({ success: true, data: enrichedData });
   } catch (error) {
     console.error('Error fetching attendance:', error);
     return NextResponse.json(

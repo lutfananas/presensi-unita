@@ -72,6 +72,8 @@ interface AttendanceRecord {
   longitude: number | null;
   locationAddress: string | null;
   createdAt: string;
+  _distanceFromCampus?: number | null;
+  _geoVerified?: boolean | null;
 }
 
 interface WFHRecord {
@@ -864,9 +866,9 @@ export default function PresensiPage() {
                             <button onClick={() => { setGeoLocation(null); setGeoFenceStatus(null); setDistanceFromCampus(null); }} className="text-[#86868b] hover:text-[#ff453a] transition-colors flex-shrink-0"><X className="w-3.5 h-3.5" /></button>
                           </div>
                           {geoFenceStatus === 'outside' && distanceFromCampus !== null && jenisKehadiran.includes('Kampus') && (
-                            <div className="px-4 py-3 rounded-2xl" style={{ background: "rgba(255, 69, 58, 0.06)", border: "1px solid rgba(255, 69, 58, 0.15)" }}>
-                              <p className="text-xs font-medium" style={{ color: "#ff453a" }}>
-                                Absensi ditolak! Anda berada {distanceFromCampus}m dari kampus. (Batas: {ALLOWED_RADIUS}m)
+                            <div className="px-4 py-3 rounded-2xl" style={{ background: "rgba(255, 159, 10, 0.06)", border: "1px solid rgba(255, 159, 10, 0.15)" }}>
+                              <p className="text-xs font-medium" style={{ color: "#ff9f0a" }}>
+                                Perhatian: Anda berada {distanceFromCampus}m dari kampus. Absensi tetap tersimpan, namun akan ditandai di Laporan.
                               </p>
                               <p className="text-[10px] text-[#86868b] mt-1">Jika Anda sedang Dinas Luar Kampus, pilih Jenis Kehadiran "Dinas Luar Kampus" pada dropdown di atas.</p>
                             </div>
@@ -1095,8 +1097,9 @@ export default function PresensiPage() {
                             <th className="hidden md:table-cell">Unit Kerja</th>
                             <th>Tipe</th>
                             <th className="hidden lg:table-cell">Jenis Kehadiran</th>
+                            <th className="hidden lg:table-cell">Lokasi</th>
+                            <th className="hidden xl:table-cell text-center">Geo</th>
                             <th className="hidden lg:table-cell">Pesan</th>
-                            <th className="hidden xl:table-cell">Lokasi</th>
                             <th className="text-center">Foto</th>
                             <th className="text-center">Aksi</th>
                           </tr>
@@ -1117,8 +1120,7 @@ export default function PresensiPage() {
                                   {r.jenisKehadiran || "Masuk Kerja Kampus"}
                                 </span>
                               </td>
-                              <td className="hidden lg:table-cell max-w-[200px]"><span className="text-xs text-[#86868b] line-clamp-2">{r.pesan || "-"}</span></td>
-                              <td className="hidden xl:table-cell">
+                              <td className="hidden lg:table-cell">
                                 {r.locationAddress && r.latitude && r.longitude ? (
                                   <a
                                     href={`https://www.google.com/maps?q=${r.latitude},${r.longitude}`}
@@ -1128,17 +1130,28 @@ export default function PresensiPage() {
                                     style={{ color: "#2997ff" }}
                                   >
                                     <MapPin className="w-3 h-3 flex-shrink-0" />
-                                    <span className="truncate max-w-[150px]">{r.locationAddress.split(',')[0]}</span>
+                                    <span className="truncate max-w-[120px]">{r.locationAddress.split(',')[0]}</span>
                                   </a>
-                                ) : r.locationAddress ? (
-                                  <span className="text-xs flex items-center gap-1" style={{ color: "#2997ff" }}>
-                                    <MapPin className="w-3 h-3 flex-shrink-0" />
-                                    <span className="truncate max-w-[150px]">{r.locationAddress.split(',')[0]}</span>
-                                  </span>
                                 ) : (
                                   <span className="text-xs text-[#86868b]/40">-</span>
                                 )}
                               </td>
+                              <td className="hidden xl:table-cell text-center">
+                                {r._distanceFromCampus !== null && r._distanceFromCampus !== undefined ? (
+                                  r._geoVerified ? (
+                                    <span className="apple-badge bg-[#30d158]/15 text-[#30d158]">
+                                      {r._distanceFromCampus}m
+                                    </span>
+                                  ) : (
+                                    <span className="apple-badge bg-[#ff453a]/15 text-[#ff453a] cursor-help" title={`Di luar area kampus (${r._distanceFromCampus}m). Periksa foto untuk verifikasi.`}>
+                                      {r._distanceFromCampus}m !
+                                    </span>
+                                  )
+                                ) : (
+                                  <span className="text-xs text-[#86868b]/40">-</span>
+                                )}
+                              </td>
+                              <td className="hidden lg:table-cell max-w-[200px]"><span className="text-xs text-[#86868b] line-clamp-2">{r.pesan || "-"}</span></td>
                               <td className="text-center">
                                 {r.photoData ? (
                                   <button onClick={() => setSelectedPhoto(r.photoData)} className="inline-flex items-center justify-center w-8 h-8 rounded-xl transition-colors" style={{ background: "rgba(41,151,255,0.1)" }}>
