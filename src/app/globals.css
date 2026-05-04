@@ -4,38 +4,38 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: #000000;
+  --color-background: #000810;
   --color-foreground: #f5f5f7;
-  --color-card: #1d1d1f;
+  --color-card: #0a1628;
   --color-card-foreground: #f5f5f7;
-  --color-popover: #1d1d1f;
+  --color-popover: #0a1628;
   --color-popover-foreground: #f5f5f7;
-  --color-primary: #2997ff;
+  --color-primary: #005590;
   --color-primary-foreground: #ffffff;
-  --color-secondary: #2c2c2e;
+  --color-secondary: #1a2a42;
   --color-secondary-foreground: #f5f5f7;
-  --color-muted: #1c1c1e;
+  --color-muted: #0d1f35;
   --color-muted-foreground: #86868b;
-  --color-accent: #2c2c2e;
+  --color-accent: #1a2a42;
   --color-accent-foreground: #f5f5f7;
-  --color-destructive: #ff453a;
+  --color-destructive: #ee2324;
   --color-destructive-foreground: #ffffff;
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-input: rgba(255, 255, 255, 0.08);
-  --color-ring: #2997ff;
-  --color-chart-1: #2997ff;
-  --color-chart-2: #bf5af2;
+  --color-border: rgba(0, 85, 144, 0.12);
+  --color-input: rgba(0, 85, 144, 0.12);
+  --color-ring: #005590;
+  --color-chart-1: #005590;
+  --color-chart-2: #741c74;
   --color-chart-3: #30d158;
-  --color-chart-4: #ff9f0a;
-  --color-chart-5: #ff453a;
-  --color-sidebar: #1d1d1f;
+  --color-chart-4: #ffcb01;
+  --color-chart-5: #ee2324;
+  --color-sidebar: #0a1628;
   --color-sidebar-foreground: #f5f5f7;
-  --color-sidebar-primary: #2997ff;
+  --color-sidebar-primary: #005590;
   --color-sidebar-primary-foreground: #ffffff;
-  --color-sidebar-accent: #2c2c2e;
+  --color-sidebar-accent: #1a2a42;
   --color-sidebar-accent-foreground: #f5f5f7;
-  --color-sidebar-border: rgba(255, 255, 255, 0.08);
-  --color-sidebar-ring: #2997ff;
+  --color-sidebar-border: rgba(0, 85, 144, 0.12);
+  --color-sidebar-ring: #005590;
   --radius-sm: 0.625rem;
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
@@ -60,39 +60,46 @@ body {
 /* ============ SCROLLBAR ============ */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+::-webkit-scrollbar-thumb { background: rgba(0, 85, 144, 0.25); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0, 85, 144, 0.4); }
 
 .custom-scrollbar::-webkit-scrollbar { width: 5px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 85, 144, 0.2); border-radius: 3px; }
 
-/* ============ APPLE GRADIENT TEXT ============ */
+/* ============ GRADIENT TEXT ============ */
 .text-gradient-blue {
-  background: linear-gradient(135deg, #2997ff 0%, #5ac8fa 50%, #2997ff 100%);
+  background: linear-gradient(135deg, #005590 0%, #0077b6 50%, #005590 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .text-gradient-hero {
-  background: linear-gradient(180deg, #f5f5f7 0%, #a1a1a6 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #ffcb01 50%, #005590 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .text-gradient-purple {
-  background: linear-gradient(135deg, #bf5af2 0%, #da8fff 100%);
+  background: linear-gradient(135deg, #741c74 0%, #a83279 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* ============ APPLE CARD ============ */
+.text-gradient-gold {
+  background: linear-gradient(135deg, #ffcb01 0%, #ffd54f 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============ CARD ============ */
 .apple-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 85, 144, 0.04);
+  border: 1px solid rgba(0, 85, 144, 0.1);
   border-radius: 20px;
 }
 
@@ -101,23 +108,21 @@ body {
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
   .apple-card:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 85, 144, 0.08);
+    border-color: rgba(0, 85, 144, 0.18);
     transform: scale(1.01);
   }
 }
 
 /* ============ TOP NAVIGATION ============ */
-/* Solid background on all devices — backdrop-filter causes rendering bugs on iOS
-   (gray overlay, fixed-position breakage, and unresponsive touch events). */
 .apple-nav {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 50;
-  background: #000000;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #000c18;
+  border-bottom: 1px solid rgba(0, 85, 144, 0.15);
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
 }
@@ -138,13 +143,13 @@ body {
     transition: all 0.3s ease;
   }
   .nav-link:hover {
-    color: #f5f5f7;
+    color: #ffcb01;
   }
 }
 
 .nav-link.active {
-  color: #f5f5f7;
-  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  background: rgba(0, 85, 144, 0.6);
 }
 
 /* ============ HERO ============ */
@@ -153,7 +158,7 @@ body {
   width: 600px;
   height: 600px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(41, 151, 255, 0.15) 0%, rgba(191, 90, 242, 0.08) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(0, 85, 144, 0.2) 0%, rgba(255, 203, 1, 0.08) 40%, transparent 70%);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -194,7 +199,7 @@ body {
   .apple-section-wide { padding: 0 22px; }
 }
 
-/* ============ BUTTONS (Apple-style) ============ */
+/* ============ BUTTONS ============ */
 .apple-btn {
   display: inline-flex;
   align-items: center;
@@ -203,7 +208,7 @@ body {
   padding: 12px 24px;
   border-radius: 980px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   border: none;
   outline: none;
@@ -216,66 +221,66 @@ body {
 }
 
 .apple-btn-blue {
-  background: #2997ff;
+  background: #005590;
   color: #fff;
 }
 @media (hover: hover) {
   .apple-btn-blue:hover {
-    background: #0077ed;
+    background: #0070b8;
     transform: scale(1.02);
   }
 }
 
 .apple-btn-green {
-  background: #30d158;
+  background: #005590;
   color: #fff;
 }
 @media (hover: hover) {
   .apple-btn-green:hover {
-    background: #28a745;
+    background: #0070b8;
     transform: scale(1.02);
   }
 }
 
 .apple-btn-red {
-  background: #ff453a;
+  background: #ee2324;
   color: #fff;
 }
 @media (hover: hover) {
   .apple-btn-red:hover {
-    background: #d70015;
+    background: #c91e1e;
     transform: scale(1.02);
   }
 }
 
 .apple-btn-orange {
-  background: #ff9f0a;
-  color: #fff;
+  background: #ffcb01;
+  color: #1a1a1a;
 }
 @media (hover: hover) {
   .apple-btn-orange:hover {
-    background: #e08600;
+    background: #ffd54f;
     transform: scale(1.02);
   }
 }
 
 .apple-btn-secondary {
-  background: rgba(255, 255, 255, 0.08);
-  color: #2997ff;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 85, 144, 0.12);
+  color: #005590;
+  border: 1px solid rgba(0, 85, 144, 0.2);
 }
 @media (hover: hover) {
   .apple-btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(0, 85, 144, 0.2);
   }
 }
 
-/* ============ FORM INPUTS (Apple-style) ============ */
+/* ============ FORM INPUTS ============ */
 .apple-input {
   width: 100%;
   padding: 14px 18px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 85, 144, 0.04);
+  border: 1px solid rgba(0, 85, 144, 0.1);
   border-radius: 12px;
   color: #f5f5f7;
   font-size: 15px;
@@ -287,16 +292,16 @@ body {
 }
 
 .apple-input:focus {
-  border-color: #2997ff;
-  background: rgba(41, 151, 255, 0.04);
-  box-shadow: 0 0 0 3px rgba(41, 151, 255, 0.15);
+  border-color: #005590;
+  background: rgba(0, 85, 144, 0.06);
+  box-shadow: 0 0 0 3px rgba(0, 85, 144, 0.15);
 }
 
 .apple-select {
   width: 100%;
   padding: 14px 18px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 85, 144, 0.04);
+  border: 1px solid rgba(0, 85, 144, 0.1);
   border-radius: 12px;
   color: #f5f5f7;
   font-size: 15px;
@@ -306,20 +311,20 @@ body {
 }
 
 .apple-select:focus {
-  border-color: #2997ff;
-  box-shadow: 0 0 0 3px rgba(41, 151, 255, 0.15);
+  border-color: #005590;
+  box-shadow: 0 0 0 3px rgba(0, 85, 144, 0.15);
 }
 
 .apple-select option {
-  background: #1c1c1e;
+  background: #0d1f35;
   color: #f5f5f7;
 }
 
 .apple-textarea {
   width: 100%;
   padding: 14px 18px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 85, 144, 0.04);
+  border: 1px solid rgba(0, 85, 144, 0.1);
   border-radius: 12px;
   color: #f5f5f7;
   font-size: 15px;
@@ -332,9 +337,9 @@ body {
 }
 
 .apple-textarea:focus {
-  border-color: #2997ff;
-  background: rgba(41, 151, 255, 0.04);
-  box-shadow: 0 0 0 3px rgba(41, 151, 255, 0.15);
+  border-color: #005590;
+  background: rgba(0, 85, 144, 0.06);
+  box-shadow: 0 0 0 3px rgba(0, 85, 144, 0.15);
 }
 
 /* ============ DATA TABLE ============ */
@@ -351,8 +356,8 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #86868b;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(0, 85, 144, 0.1);
+  background: rgba(0, 85, 144, 0.04);
   position: sticky;
   top: 0;
   z-index: 1;
@@ -361,7 +366,7 @@ body {
 .data-table tbody td {
   padding: 12px 16px;
   font-size: 13px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(0, 85, 144, 0.05);
 }
 
 @media (hover: hover) {
@@ -369,14 +374,14 @@ body {
     transition: background 0.2s ease;
   }
   .data-table tbody tr:hover {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(0, 85, 144, 0.04);
   }
 }
 
 /* ============ STAT CARDS ============ */
 .stat-card-apple {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 85, 144, 0.04);
+  border: 1px solid rgba(0, 85, 144, 0.1);
   border-radius: 20px;
   padding: 24px;
   position: relative;
@@ -388,7 +393,7 @@ body {
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
   .stat-card-apple:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(0, 85, 144, 0.08);
     transform: translateY(-2px);
   }
 }
@@ -445,7 +450,7 @@ body {
 .pill-toggle {
   display: inline-flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(0, 85, 144, 0.08);
   border-radius: 980px;
   padding: 3px;
   gap: 2px;
@@ -479,32 +484,30 @@ body {
 
 .pill-toggle-item.active {
   color: #fff;
-  background: rgba(255, 255, 255, 0.12);
+  background: #005590;
 }
 
 /* ============ INSIGHT CARD ============ */
 .insight-card {
-  background: linear-gradient(135deg, rgba(41, 151, 255, 0.08) 0%, rgba(191, 90, 242, 0.06) 100%);
-  border: 1px solid rgba(41, 151, 255, 0.15);
+  background: linear-gradient(135deg, rgba(0, 85, 144, 0.1) 0%, rgba(255, 203, 1, 0.06) 100%);
+  border: 1px solid rgba(0, 85, 144, 0.15);
   border-radius: 20px;
 }
 
 /* ============ MOBILE BOTTOM NAV ============ */
-/* z-index 60 ensures it stays above the top nav (z-50) and any other content. */
 .mobile-bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 60;
-  background: #000000;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: #000c18;
+  border-top: 1px solid rgba(0, 85, 144, 0.15);
   padding-top: 6px;
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
 }
 
-/* iPhone safe area */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .mobile-bottom-nav {
     padding-bottom: env(safe-area-inset-bottom);
@@ -529,8 +532,6 @@ body {
 }
 
 /* ============ MAIN CONTENT AREA ============ */
-/* Padding accounts for fixed top nav (48px on mobile, 80px on desktop)
-   and fixed bottom nav (70px on mobile only). */
 .apple-main {
   padding-top: 48px;
 }
@@ -586,7 +587,7 @@ body {
 /* ============ DIVIDER ============ */
 .apple-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 85, 144, 0.1);
 }
 
 /* Filter grid single column on small mobile */
