@@ -770,12 +770,12 @@ export default function PresensiPage() {
             <div className="animate-fade-in-up space-y-5 sm:space-y-8">
 
               {/* Clock Display */}
-              <div className="apple-card p-5 sm:p-8 text-center">
+              <div className="rounded-2xl p-5 sm:p-8 text-center" style={{ background: '#005590' }}>
                 <div className="flex items-center justify-center gap-2 mb-3">
-                  <Clock className="w-4 h-4 text-[#6b7280]" />
-                  <span className="text-xs uppercase tracking-widest text-[#6b7280] font-medium">Waktu Lokal</span>
+                  <Clock className="w-4 h-4 text-white" />
+                  <span className="text-xs uppercase tracking-widest text-white/80 font-medium">Waktu Lokal</span>
                 </div>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#005590] font-mono tracking-wider">
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white font-mono tracking-wider">
                   <ClockDisplay />
                 </p>
               </div>
