@@ -223,6 +223,22 @@ export default function PresensiPage() {
     if (activeTab === "analisa") fetchAnalysisData();
   }, [activeTab, fetchAnalysisData]);
 
+  // ============ GEOFENCING CONFIG ============
+  const CAMPUS_CENTER = { lat: -8.0903366, lng: 111.9003307 };
+  const ALLOWED_RADIUS = 500; // meter
+  const [geoFenceStatus, setGeoFenceStatus] = useState<'inside' | 'outside' | 'loading' | null>(null);
+  const [distanceFromCampus, setDistanceFromCampus] = useState<number | null>(null);
+
+  const haversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371000;
+    const toRad = (deg: number) => (deg * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  };
+
   // ============ GEOLOCATION ============
   const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
     try {
@@ -246,17 +262,27 @@ export default function PresensiPage() {
       return null;
     }
     setIsGettingLocation(true);
+    setGeoFenceStatus('loading');
     return new Promise((resolve) => {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
           const address = await reverseGeocode(lat, lng);
+          // Calculate geofence
+          const dist = haversineDistance(lat, lng, CAMPUS_CENTER.lat, CAMPUS_CENTER.lng);
+          setDistanceFromCampus(Math.round(dist));
+          if (dist <= ALLOWED_RADIUS) {
+            setGeoFenceStatus('inside');
+          } else {
+            setGeoFenceStatus('outside');
+          }
           setIsGettingLocation(false);
           resolve({ lat, lng, address });
         },
         (error) => {
           setIsGettingLocation(false);
+          setGeoFenceStatus(null);
           switch (error.code) {
             case 1: toast({ title: "Izin lokasi ditolak", description: "Aktifkan izin lokasi di browser untuk menggunakan fitur geotag", variant: "destructive" }); break;
             case 2: toast({ title: "Lokasi tidak tersedia", description: "Pastikan GPS perangkat aktif", variant: "destructive" }); break;
@@ -823,20 +849,40 @@ export default function PresensiPage() {
                     {/* GeoTag Status */}
                     <div className="mb-4">
                       {geoLocation ? (
-                        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl" style={{ background: "rgba(48, 209, 88, 0.08)", border: "1px solid rgba(48, 209, 88, 0.2)" }}>
-                          <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: "#30d158" }} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium" style={{ color: "#30d158" }}>Lokasi aktif</p>
-                            <p className="text-xs text-[#86868b] truncate">{geoLocation.address}</p>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3 px-4 py-3 rounded-2xl" style={{
+                            background: geoFenceStatus === 'outside' ? "rgba(255, 69, 58, 0.08)" : geoFenceStatus === 'inside' ? "rgba(48, 209, 88, 0.08)" : "rgba(48, 209, 88, 0.08)",
+                            border: geoFenceStatus === 'outside' ? "1px solid rgba(255, 69, 58, 0.2)" : "1px solid rgba(48, 209, 88, 0.2)",
+                          }}>
+                            <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: geoFenceStatus === 'outside' ? "#ff453a" : "#30d158" }} />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium" style={{ color: geoFenceStatus === 'outside' ? "#ff453a" : "#30d158" }}>
+                                {geoFenceStatus === 'inside' ? 'Lokasi aktif - Area Kampus' : geoFenceStatus === 'outside' ? 'Di luar Area Kampus' : 'Lokasi aktif'}
+                              </p>
+                              <p className="text-xs text-[#86868b] truncate">{geoLocation.address}</p>
+                            </div>
+                            <button onClick={() => { setGeoLocation(null); setGeoFenceStatus(null); setDistanceFromCampus(null); }} className="text-[#86868b] hover:text-[#ff453a] transition-colors flex-shrink-0"><X className="w-3.5 h-3.5" /></button>
                           </div>
-                          <button onClick={() => setGeoLocation(null)} className="text-[#86868b] hover:text-[#ff453a] transition-colors flex-shrink-0"><X className="w-3.5 h-3.5" /></button>
+                          {geoFenceStatus === 'outside' && distanceFromCampus !== null && jenisKehadiran.includes('Kampus') && (
+                            <div className="px-4 py-3 rounded-2xl" style={{ background: "rgba(255, 69, 58, 0.06)", border: "1px solid rgba(255, 69, 58, 0.15)" }}>
+                              <p className="text-xs font-medium" style={{ color: "#ff453a" }}>
+                                Absensi ditolak! Anda berada {distanceFromCampus}m dari kampus. (Batas: {ALLOWED_RADIUS}m)
+                              </p>
+                              <p className="text-[10px] text-[#86868b] mt-1">Jika Anda sedang Dinas Luar Kampus, pilih Jenis Kehadiran "Dinas Luar Kampus" pada dropdown di atas.</p>
+                            </div>
+                          )}
+                          {geoFenceStatus === 'inside' && distanceFromCampus !== null && (
+                            <p className="text-[10px] text-[#86868b] px-1">
+                              Jarak dari kampus: {distanceFromCampus}m (dalam radius {ALLOWED_RADIUS}m)
+                            </p>
+                          )}
                         </div>
                       ) : (
                         <button onClick={async () => { const loc = await requestGeoLocation(); if (loc) setGeoLocation(loc); }} disabled={isGettingLocation} className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-dashed w-full text-left transition-all" style={{ borderColor: "rgba(41, 151, 255, 0.3)" }}>
                           {isGettingLocation ? <Loader2 className="w-4 h-4 animate-spin" style={{ color: "#2997ff" }} /> : <MapPin className="w-4 h-4" style={{ color: "#2997ff" }} />}
                           <div className="flex-1">
                             <p className="text-xs font-medium" style={{ color: "#2997ff" }}>{isGettingLocation ? "Mencari lokasi GPS..." : "Aktifkan Lokasi (GeoTag)"}</p>
-                            <p className="text-xs text-[#86868b]">{isGettingLocation ? "Mohon tunggu..." : "Foto akan dilengkapi timestamp & lokasi otomatis"}</p>
+                            <p className="text-xs text-[#86868b]">{isGettingLocation ? "Mohon tunggu, sedang verifikasi area..." : "Lokasi akan diverifikasi apakah di area kampus"}</p>
                           </div>
                         </button>
                       )}

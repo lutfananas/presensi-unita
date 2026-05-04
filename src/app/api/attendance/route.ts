@@ -1,6 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+// ============ GEOFENCING CONFIG ============
+// Koordinat pusat kampus Universitas Tulungagung
+const CAMPUS_CENTER = {
+  lat: -8.0903366,
+  lng: 111.9003307,
+};
+
+// Radius yang diizinkan (dalam meter) - 500 meter dari pusat kampus
+const ALLOWED_RADIUS_METERS = 500;
+
+// Apakah geofencing aktif (bisa di-toggle)
+const GEOFENCING_ENABLED = true;
+
+/**
+ * Menghitung jarak antara dua titik koordinat menggunakan rumus Haversine
+ * @returns jarak dalam meter
+ */
+function haversineDistance(
+  lat1: number, lon1: number,
+  lat2: number, lon2: number
+): number {
+  const R = 6371000; // Radius bumi dalam meter
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -17,6 +53,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Tipe harus HADIR atau PULANG' },
         { status: 400 }
+      );
+    }
+
+    // ============ GEOFENCING VALIDATION ============
+    // Untuk jenis "Masuk Kerja Kampus", wajib berada di area kampus
+    const jenisKehadiranValue = jenisKehadiran?.trim() || "Masuk Kerja Kampus";
+    const isKampus = jenisKehadiranValue.includes("Kampus");
+
+    if (GEOFENCING_ENABLED && isKampus && latitude && longitude) {
+      const distance = haversineDistance(
+        latitude, longitude,
+        CAMPUS_CENTER.lat, CAMPUS_CENTER.lng
+      );
+
+      if (distance > ALLOWED_RADIUS_METERS) {
+        // Lokasi di luar area kampus
+        return NextResponse.json(
+          {
+            error: `Lokasi Anda berada di luar area kampus (${Math.round(distance)}m dari kampus). Absensi Masuk Kerja Kampus hanya diizinkan dalam radius ${ALLOWED_RADIUS_METERS}m dari Universitas Tulungagung.`
+          },
+          { status: 403 }
+        );
+      }
+    } else if (GEOFENCING_ENABLED && isKampus && (!latitude || !longitude)) {
+      return NextResponse.json(
+        {
+          error: 'Absensi Masuk Kerja Kampus wajib mengaktifkan lokasi GPS. Silakan aktifkan lokasi lalu ambil foto untuk melanjutkan.'
+        },
+        { status: 403 }
       );
     }
 
