@@ -41,13 +41,12 @@ export async function GET(request: NextRequest) {
     const where: Record<string, unknown> = {};
 
     if (date) {
-      const startDate = new Date(date);
-      startDate.setHours(0, 0, 0, 0);
-      const endDate = new Date(date);
-      endDate.setHours(23, 59, 59, 999);
+      // Parse date as WIB day boundaries and convert to UTC for DB query
+      const wibStart = new Date(`${date}T00:00:00+07:00`);
+      const wibEnd = new Date(`${date}T23:59:59.999+07:00`);
       where.createdAt = {
-        gte: startDate,
-        lte: endDate,
+        gte: wibStart,
+        lte: wibEnd,
       };
     }
 

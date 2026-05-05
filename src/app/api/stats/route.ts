@@ -3,10 +3,16 @@ import { db } from '@/lib/db';
 
 export async function GET() {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    // Compute "today" in WIB (UTC+7), then convert to UTC for DB query
+    const nowWIB = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+    const todayWIB = new Date(nowWIB);
+    todayWIB.setHours(0, 0, 0, 0);
+    const tomorrowWIB = new Date(todayWIB);
+    tomorrowWIB.setDate(tomorrowWIB.getDate() + 1);
+
+    // Convert WIB midnight boundaries to UTC
+    const today = new Date(todayWIB.getTime() - 7 * 60 * 60 * 1000);
+    const tomorrow = new Date(tomorrowWIB.getTime() - 7 * 60 * 60 * 1000);
 
     const todayAttendance = await db.attendance.findMany({
       where: {

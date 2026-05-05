@@ -170,13 +170,16 @@ export async function POST(request: NextRequest) {
     }
 
     // ============ SERVER-SIDE TIMESTAMP (WIB = UTC+7) ============
-    // IMPORTANT: createdAt uses Prisma @default(now()) which is SERVER time (UTC)
-    // We use server time for all calculations - client timezone cannot manipulate this
-    const serverNow = new Date();
-    const todayStart = new Date(serverNow);
-    todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date(serverNow);
-    todayEnd.setHours(23, 59, 59, 999);
+    // createdAt uses Prisma @default(now()) which is SERVER time (UTC)
+    // Convert to WIB for date boundary calculations
+    const nowWIB = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+    const todayStartWIB = new Date(nowWIB);
+    todayStartWIB.setHours(0, 0, 0, 0);
+    const todayEndWIB = new Date(nowWIB);
+    todayEndWIB.setHours(23, 59, 59, 999);
+    // Convert WIB boundaries to UTC for DB query
+    const todayStart = new Date(todayStartWIB.getTime() - 7 * 60 * 60 * 1000);
+    const todayEnd = new Date(todayEndWIB.getTime() - 7 * 60 * 60 * 1000);
 
     // Cegah duplikat: cek apakah nama sudah absen dengan tipe yang sama hari ini
     const todayRecords = await db.attendance.findMany({
@@ -256,13 +259,12 @@ export async function GET(request: NextRequest) {
     const where: Record<string, unknown> = {};
 
     if (date) {
-      const startDate = new Date(date);
-      startDate.setHours(0, 0, 0, 0);
-      const endDate = new Date(date);
-      endDate.setHours(23, 59, 59, 999);
+      // Parse date as WIB day boundaries and convert to UTC for DB query
+      const wibStart = new Date(`${date}T00:00:00+07:00`);
+      const wibEnd = new Date(`${date}T23:59:59.999+07:00`);
       where.createdAt = {
-        gte: startDate,
-        lte: endDate,
+        gte: wibStart,
+        lte: wibEnd,
       };
     }
 

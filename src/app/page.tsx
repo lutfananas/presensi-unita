@@ -261,7 +261,11 @@ export default function PresensiPage() {
   const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
   const [wfhData, setWfhData] = useState<WFHRecord[]>([]);
   const [stats, setStats] = useState<StatsData | null>(null);
-  const [filterDate, setFilterDate] = useState(new Date().toISOString().split("T")[0]);
+  const [filterDate, setFilterDate] = useState(() => {
+    // Use WIB date, not UTC date
+    const nowWIB = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+    return nowWIB.toISOString().split("T")[0];
+  });
   const [filterUnit, setFilterUnit] = useState("SEMUA");
   const [filterType, setFilterType] = useState("SEMUA");
   const [searchQuery, setSearchQuery] = useState("");
@@ -279,7 +283,10 @@ export default function PresensiPage() {
   // Map Filter State
   const [mapFilterUnit, setMapFilterUnit] = useState("SEMUA");
   const [mapFilterType, setMapFilterType] = useState("SEMUA");
-  const [mapFilterDate, setMapFilterDate] = useState(new Date().toISOString().split("T")[0]);
+  const [mapFilterDate, setMapFilterDate] = useState(() => {
+    const nowWIB = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+    return nowWIB.toISOString().split("T")[0];
+  });
 
   // ============ DATA FETCHING ============
   const fetchStats = useCallback(async () => {
