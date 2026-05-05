@@ -33,6 +33,7 @@ import {
   Loader2,
 } from "lucide-react";
 import jsPDF from "jspdf";
+import * as XLSX from "xlsx";
 
 // ============ CONSTANTS ============
 const UNIT_KERJA_LIST = [
@@ -486,33 +487,147 @@ export default function PresensiPage() {
 
   const escapeCSV = (str: string) => `"${String(str).replace(/"/g, '""')}"`;
 
-  const downloadFile = (content: string, filename: string, mimeType: string) => {
-    const BOM = "\uFEFF";
-    const blob = new Blob([BOM + content], { type: `${mimeType};charset=utf-8` });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = filename; a.style.display = "none";
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 100);
-  };
+  const handleExportExcel = () => {
+    const wb = XLSX.utils.book_new();
 
-  const generateAttendanceCSV = (data: AttendanceRecord[]) => {
-    const headers = ["Waktu", "Nama Lengkap", "Unit Kerja", "Tipe", "Jenis Kehadiran", "Pesan"];
-    const rows = data.map(r => [formatDateTime(r.createdAt), r.namaLengkap, r.unitKerja, r.type, r.jenisKehadiran || "Masuk Kerja Kampus", r.pesan || "-"]);
-    return [headers, ...rows].map(row => row.map(escapeCSV).join(",")).join("\r\n");
-  };
+    if (reportTab === "presensi") {
+      const headers = ["No", "Waktu", "Nama Lengkap", "Unit Kerja", "Tipe", "Jenis Kehadiran", "Lokasi", "Jarak (m)", "Geo Verifikasi", "Pesan"];
+      const rows = attendanceData.map((r, i) => [
+        i + 1,
+        formatDateTime(r.createdAt),
+        r.namaLengkap,
+        r.unitKerja,
+        r.type,
+        r.jenisKehadiran || "Masuk Kerja Kampus",
+        r.locationAddress || "-",
+        r._distanceFromCampus != null ? r._distanceFromCampus : "-",
+        r._geoVerified ? "Ya" : r._distanceFromCampus != null ? "Di Luar Kampus" : "-",
+        r.pesan || "-"
+      ]);
+      const wsData = [headers, ...rows];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-  const generateWFHCSV = (data: WFHRecord[]) => {
-    const headers = ["Waktu", "Nama Lengkap", "Unit Kerja", "Deskripsi Pekerjaan"];
-    const rows = data.map(r => [formatDateTime(r.createdAt), r.namaLengkap, r.unitKerja, r.deskripsiPekerjaan]);
-    return [headers, ...rows].map(row => row.map(escapeCSV).join(",")).join("\r\n");
-  };
+      // Column widths
+      ws["!cols"] = [
+        { wch: 5 },   // No
+        { wch: 22 },  // Waktu
+        { wch: 28 },  // Nama
+        { wch: 30 },  // Unit Kerja
+        { wch: 8 },   // Tipe
+        { wch: 35 },  // Jenis Kehadiran
+        { wch: 40 },  // Lokasi
+        { wch: 12 },  // Jarak
+        { wch: 16 },  // Geo
+        { wch: 35 },  // Pesan
+      ];
 
-  const handleExportCSV = () => {
-    const csvData = reportTab === "presensi" ? generateAttendanceCSV(attendanceData) : generateWFHCSV(wfhData);
-    downloadFile(csvData, reportTab === "presensi" ? `absensi-${filterDate}.csv` : `wfh-${filterDate}.csv`, "text/csv");
-    toast({ title: "Export CSV berhasil!" });
+      // Header row style
+      const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+      for (let c = range.s.c; c <= range.e.c; c++) {
+        const cellAddr = XLSX.utils.encode_cell({ r: 0, c });
+        if (!ws[cellAddr]) continue;
+        ws[cellAddr].s = {
+          font: { bold: true, color: { rgb: "FFFFFF" }, sz: 11 },
+          fill: { fgColor: { rgb: "005590" } },
+          alignment: { horizontal: "center", vertical: "center", wrapText: true },
+          border: {
+            top: { style: "thin", color: { rgb: "004A7E" } },
+            bottom: { style: "thin", color: { rgb: "004A7E" } },
+            left: { style: "thin", color: { rgb: "004A7E" } },
+            right: { style: "thin", color: { rgb: "004A7E" } },
+          }
+        };
+      }
+
+      // Data row styles
+      for (let r = 1; r <= range.e.r; r++) {
+        for (let c = range.s.c; c <= range.e.c; c++) {
+          const cellAddr = XLSX.utils.encode_cell({ r, c });
+          if (!ws[cellAddr]) continue;
+          ws[cellAddr].s = {
+            font: { sz: 10, color: { rgb: "333333" } },
+            alignment: { vertical: "center", wrapText: true },
+            border: {
+              top: { style: "thin", color: { rgb: "D9E1F2" } },
+              bottom: { style: "thin", color: { rgb: "D9E1F2" } },
+              left: { style: "thin", color: { rgb: "D9E1F2" } },
+              right: { style: "thin", color: { rgb: "D9E1F2" } },
+            }
+          };
+          // Alternate row color
+          if (r % 2 === 0) {
+            ws[cellAddr].s.fill = { fgColor: { rgb: "EBF1FA" } };
+          }
+          // Center align specific columns
+          if (c === 0 || c === 3 || c === 7 || c === 8) {
+            ws[cellAddr].s.alignment.horizontal = "center";
+          }
+        }
+      }
+
+      XLSX.utils.book_append_sheet(wb, ws, "Absensi");
+    } else {
+      const headers = ["No", "Waktu", "Nama Lengkap", "Unit Kerja", "Deskripsi Pekerjaan"];
+      const rows = wfhData.map((r, i) => [
+        i + 1,
+        formatDateTime(r.createdAt),
+        r.namaLengkap,
+        r.unitKerja,
+        r.deskripsiPekerjaan
+      ]);
+      const wsData = [headers, ...rows];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      ws["!cols"] = [
+        { wch: 5 },   // No
+        { wch: 22 },  // Waktu
+        { wch: 28 },  // Nama
+        { wch: 30 },  // Unit Kerja
+        { wch: 50 },  // Deskripsi
+      ];
+
+      const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+      for (let c = range.s.c; c <= range.e.c; c++) {
+        const cellAddr = XLSX.utils.encode_cell({ r: 0, c });
+        if (!ws[cellAddr]) continue;
+        ws[cellAddr].s = {
+          font: { bold: true, color: { rgb: "FFFFFF" }, sz: 11 },
+          fill: { fgColor: { rgb: "005590" } },
+          alignment: { horizontal: "center", vertical: "center", wrapText: true },
+          border: {
+            top: { style: "thin", color: { rgb: "004A7E" } },
+            bottom: { style: "thin", color: { rgb: "004A7E" } },
+            left: { style: "thin", color: { rgb: "004A7E" } },
+            right: { style: "thin", color: { rgb: "004A7E" } },
+          }
+        };
+      }
+
+      for (let r = 1; r <= range.e.r; r++) {
+        for (let c = range.s.c; c <= range.e.c; c++) {
+          const cellAddr = XLSX.utils.encode_cell({ r, c });
+          if (!ws[cellAddr]) continue;
+          ws[cellAddr].s = {
+            font: { sz: 10, color: { rgb: "333333" } },
+            alignment: { vertical: "center", wrapText: true },
+            border: {
+              top: { style: "thin", color: { rgb: "D9E1F2" } },
+              bottom: { style: "thin", color: { rgb: "D9E1F2" } },
+              left: { style: "thin", color: { rgb: "D9E1F2" } },
+              right: { style: "thin", color: { rgb: "D9E1F2" } },
+            }
+          };
+          if (r % 2 === 0) {
+            ws[cellAddr].s.fill = { fgColor: { rgb: "EBF1FA" } };
+          }
+        }
+      }
+
+      XLSX.utils.book_append_sheet(wb, ws, "WFH");
+    }
+
+    XLSX.writeFile(wb, reportTab === "presensi" ? `Laporan-Absensi-${filterDate}.xlsx` : `Laporan-WFH-${filterDate}.xlsx`);
+    toast({ title: "Export Excel berhasil!" });
   };
 
   // ============ PDF EXPORT ============
@@ -1019,8 +1134,8 @@ export default function PresensiPage() {
                     <Activity className="w-3.5 h-3.5" />WFH
                   </button>
                 </div>
-                <button onClick={handleExportCSV} className="apple-btn apple-btn-secondary text-xs">
-                  <Download className="w-3.5 h-3.5" />Export CSV
+                <button onClick={handleExportExcel} className="apple-btn apple-btn-secondary text-xs">
+                  <Download className="w-3.5 h-3.5" />Export Excel
                 </button>
               </div>
 
