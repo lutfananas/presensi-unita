@@ -504,67 +504,19 @@ export default function PresensiPage() {
         r._geoVerified ? "Ya" : r._distanceFromCampus != null ? "Di Luar Kampus" : "-",
         r.pesan || "-"
       ]);
-      const wsData = [headers, ...rows];
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-      // Column widths
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
       ws["!cols"] = [
-        { wch: 5 },   // No
-        { wch: 22 },  // Waktu
-        { wch: 28 },  // Nama
-        { wch: 30 },  // Unit Kerja
-        { wch: 8 },   // Tipe
-        { wch: 35 },  // Jenis Kehadiran
-        { wch: 40 },  // Lokasi
-        { wch: 12 },  // Jarak
-        { wch: 16 },  // Geo
-        { wch: 35 },  // Pesan
+        { wch: 5 },
+        { wch: 22 },
+        { wch: 28 },
+        { wch: 30 },
+        { wch: 8 },
+        { wch: 35 },
+        { wch: 40 },
+        { wch: 12 },
+        { wch: 16 },
+        { wch: 35 },
       ];
-
-      // Header row style
-      const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
-      for (let c = range.s.c; c <= range.e.c; c++) {
-        const cellAddr = XLSX.utils.encode_cell({ r: 0, c });
-        if (!ws[cellAddr]) continue;
-        ws[cellAddr].s = {
-          font: { bold: true, color: { rgb: "FFFFFF" }, sz: 11 },
-          fill: { fgColor: { rgb: "005590" } },
-          alignment: { horizontal: "center", vertical: "center", wrapText: true },
-          border: {
-            top: { style: "thin", color: { rgb: "004A7E" } },
-            bottom: { style: "thin", color: { rgb: "004A7E" } },
-            left: { style: "thin", color: { rgb: "004A7E" } },
-            right: { style: "thin", color: { rgb: "004A7E" } },
-          }
-        };
-      }
-
-      // Data row styles
-      for (let r = 1; r <= range.e.r; r++) {
-        for (let c = range.s.c; c <= range.e.c; c++) {
-          const cellAddr = XLSX.utils.encode_cell({ r, c });
-          if (!ws[cellAddr]) continue;
-          ws[cellAddr].s = {
-            font: { sz: 10, color: { rgb: "333333" } },
-            alignment: { vertical: "center", wrapText: true },
-            border: {
-              top: { style: "thin", color: { rgb: "D9E1F2" } },
-              bottom: { style: "thin", color: { rgb: "D9E1F2" } },
-              left: { style: "thin", color: { rgb: "D9E1F2" } },
-              right: { style: "thin", color: { rgb: "D9E1F2" } },
-            }
-          };
-          // Alternate row color
-          if (r % 2 === 0) {
-            ws[cellAddr].s.fill = { fgColor: { rgb: "EBF1FA" } };
-          }
-          // Center align specific columns
-          if (c === 0 || c === 3 || c === 7 || c === 8) {
-            ws[cellAddr].s.alignment.horizontal = "center";
-          }
-        }
-      }
-
       XLSX.utils.book_append_sheet(wb, ws, "Absensi");
     } else {
       const headers = ["No", "Waktu", "Nama Lengkap", "Unit Kerja", "Deskripsi Pekerjaan"];
@@ -575,58 +527,18 @@ export default function PresensiPage() {
         r.unitKerja,
         r.deskripsiPekerjaan
       ]);
-      const wsData = [headers, ...rows];
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
-
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
       ws["!cols"] = [
-        { wch: 5 },   // No
-        { wch: 22 },  // Waktu
-        { wch: 28 },  // Nama
-        { wch: 30 },  // Unit Kerja
-        { wch: 50 },  // Deskripsi
+        { wch: 5 },
+        { wch: 22 },
+        { wch: 28 },
+        { wch: 30 },
+        { wch: 50 },
       ];
-
-      const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
-      for (let c = range.s.c; c <= range.e.c; c++) {
-        const cellAddr = XLSX.utils.encode_cell({ r: 0, c });
-        if (!ws[cellAddr]) continue;
-        ws[cellAddr].s = {
-          font: { bold: true, color: { rgb: "FFFFFF" }, sz: 11 },
-          fill: { fgColor: { rgb: "005590" } },
-          alignment: { horizontal: "center", vertical: "center", wrapText: true },
-          border: {
-            top: { style: "thin", color: { rgb: "004A7E" } },
-            bottom: { style: "thin", color: { rgb: "004A7E" } },
-            left: { style: "thin", color: { rgb: "004A7E" } },
-            right: { style: "thin", color: { rgb: "004A7E" } },
-          }
-        };
-      }
-
-      for (let r = 1; r <= range.e.r; r++) {
-        for (let c = range.s.c; c <= range.e.c; c++) {
-          const cellAddr = XLSX.utils.encode_cell({ r, c });
-          if (!ws[cellAddr]) continue;
-          ws[cellAddr].s = {
-            font: { sz: 10, color: { rgb: "333333" } },
-            alignment: { vertical: "center", wrapText: true },
-            border: {
-              top: { style: "thin", color: { rgb: "D9E1F2" } },
-              bottom: { style: "thin", color: { rgb: "D9E1F2" } },
-              left: { style: "thin", color: { rgb: "D9E1F2" } },
-              right: { style: "thin", color: { rgb: "D9E1F2" } },
-            }
-          };
-          if (r % 2 === 0) {
-            ws[cellAddr].s.fill = { fgColor: { rgb: "EBF1FA" } };
-          }
-        }
-      }
-
       XLSX.utils.book_append_sheet(wb, ws, "WFH");
     }
 
-    XLSX.writeFile(wb, reportTab === "presensi" ? `Laporan-Absensi-${filterDate}.xlsx` : `Laporan-WFH-${filterDate}.xlsx`);
+    XLSX.writeFile(wb, reportTab === "presensi" ? `Laporan-Absensi-${filterDate}.xlsx` : `Laporan-WFH-${filterDate}.xlsx`, { bookType: "xlsx", type: "array" });
     toast({ title: "Export Excel berhasil!" });
   };
 
