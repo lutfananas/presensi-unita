@@ -31,10 +31,24 @@ import {
   PieChart,
   MapPin,
   Loader2,
+  Globe,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import * as XLSX from "xlsx";
+import confetti from "canvas-confetti";
+import dynamic from "next/dynamic";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPie, Pie, Cell, Legend } from "recharts";
+
+// Dynamic import for map to avoid SSR issues with Leaflet (window dependency)
+const AttendanceMap = dynamic(() => import("@/components/AttendanceMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex flex-col items-center justify-center py-20 gap-3">
+      <div className="w-10 h-10 rounded-full border-3 border-[#005590] border-t-transparent animate-spin" />
+      <span className="text-sm text-[#64748b]">Memuat peta interaktif...</span>
+    </div>
+  ),
+});
 
 // ============ CONSTANTS ============
 const UNIT_KERJA_LIST = [
@@ -60,7 +74,7 @@ const UNIT_KERJA_LIST = [
   "UKSI",
 ];
 
-type TabType = "presensi" | "wfh" | "laporan" | "analisa";
+type TabType = "presensi" | "wfh" | "laporan" | "analisa" | "peta";
 type AnalisaPeriod = "daily" | "weekly" | "monthly";
 
 interface AttendanceRecord {
@@ -261,6 +275,11 @@ export default function PresensiPage() {
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [isLoadingAnalysis, setIsLoadingAnalysis] = useState(false);
   const [analisaSubTab, setAnalisaSubTab] = useState<"ringkasan" | "unit" | "personal">("ringkasan");
+
+  // Map Filter State
+  const [mapFilterUnit, setMapFilterUnit] = useState("SEMUA");
+  const [mapFilterType, setMapFilterType] = useState("SEMUA");
+  const [mapFilterDate, setMapFilterDate] = useState(new Date().toISOString().split("T")[0]);
 
   // ============ DATA FETCHING ============
   const fetchStats = useCallback(async () => {
@@ -622,6 +641,14 @@ export default function PresensiPage() {
       });
       const json = await res.json();
       if (json.success) {
+        // CONFETTI EFFECT!
+        if (type === "HADIR") {
+          confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 }, colors: ["#005590", "#00a8ff", "#22c55e", "#4fc3f7", "#81c784"], ticks: 200, gravity: 1.2 });
+          setTimeout(() => { confetti({ particleCount: 40, angle: 60, spread: 55, origin: { x: 0 }, colors: ["#005590", "#ffcb01"] }); confetti({ particleCount: 40, angle: 120, spread: 55, origin: { x: 1 }, colors: ["#005590", "#ffcb01"] }); }, 250);
+        } else {
+          confetti({ particleCount: 70, spread: 60, origin: { y: 0.65 }, colors: ["#d97706", "#f59e0b", "#fbbf24", "#fb923c", "#fcd34d"], ticks: 180, gravity: 1.1 });
+          setTimeout(() => { confetti({ particleCount: 30, spread: 100, startVelocity: 25, origin: { y: 0.7 }, colors: ["#005590", "#d97706"] }); }, 200);
+        }
         // Show server time info so user knows the real recorded time
         const timeDesc = json.serverTimeWIB ? `Waktu server: ${json.serverTimeWIB}` : '';
         const lateDesc = json.isLate && json.isLate !== 'Tidak' ? ` | ${json.isLate}` : '';
@@ -658,6 +685,9 @@ export default function PresensiPage() {
       });
       const json = await res.json();
       if (json.success) {
+        // CONFETTI for WFH - purple & pink remote vibes
+        confetti({ particleCount: 60, spread: 55, origin: { y: 0.6 }, colors: ["#7c3aed", "#a855f7", "#ec4899", "#f472b6", "#c084fc"], ticks: 180, gravity: 1.1 });
+        setTimeout(() => { confetti({ particleCount: 30, angle: 60, spread: 50, origin: { x: 0 }, colors: ["#7c3aed", "#ec4899"] }); confetti({ particleCount: 30, angle: 120, spread: 50, origin: { x: 1 }, colors: ["#7c3aed", "#ec4899"] }); }, 200);
         toast({ title: "Aktivitas WFH berhasil disimpan!" });
         setWfhNama(""); setWfhUnit(""); setWfhDeskripsi(""); fetchStats();
       } else { toast({ title: "Gagal menyimpan", variant: "destructive" }); }
@@ -963,6 +993,7 @@ export default function PresensiPage() {
               { id: "wfh" as TabType, label: "WFH", desc: "Aktivitas Kerja dari Rumah", icon: Activity },
               { id: "laporan" as TabType, label: "Laporan", desc: "Rekap Data Absensi", icon: BarChart3 },
               { id: "analisa" as TabType, label: "Analisa", desc: "Statistik & Insight", icon: TrendingUp },
+              { id: "peta" as TabType, label: "Peta", desc: "Peta Lokasi Presensi", icon: Globe },
             ]).map((tab) => (
               <div key={tab.id} className="relative group">
                 <button onClick={() => handleTabSwitch(tab.id)}
@@ -994,6 +1025,7 @@ export default function PresensiPage() {
             { id: "wfh" as TabType, label: "WFH", icon: Activity },
             { id: "laporan" as TabType, label: "Laporan", icon: BarChart3 },
             { id: "analisa" as TabType, label: "Analisa", icon: TrendingUp },
+            { id: "peta" as TabType, label: "Peta", icon: Globe },
           ]).map((tab) => (
             <button key={tab.id} onClick={() => handleTabSwitch(tab.id)}
               className="mobile-nav-btn flex flex-col items-center gap-0.5 py-1.5 px-3 rounded-xl">
@@ -1972,6 +2004,67 @@ export default function PresensiPage() {
                   )}
                 </>
               )}
+            </div>
+          )}
+
+          {/* ========== TAB: PETA ========== */}
+          {activeTab === "peta" && (
+            <div className="animate-fade-in-up space-y-4 sm:space-y-5">
+              {/* Map Filters */}
+              <div className="apple-card p-4 sm:p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Filter className="w-4 h-4 text-[#005590]" />
+                  <span className="text-sm font-semibold text-[#1e293b]">Filter Peta</span>
+                </div>
+                <div className="filter-grid grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-[#64748b] font-medium mb-2">
+                      <Calendar className="w-3 h-3" /> Tanggal
+                    </label>
+                    <input
+                      type="date"
+                      value={mapFilterDate}
+                      onChange={(e) => setMapFilterDate(e.target.value)}
+                      className="apple-input text-xs py-2 px-3"
+                    />
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-[#64748b] font-medium mb-2">
+                      <Building2 className="w-3 h-3" /> Unit Kerja
+                    </label>
+                    <select
+                      value={mapFilterUnit}
+                      onChange={(e) => setMapFilterUnit(e.target.value)}
+                      className="apple-select text-xs py-2 px-3"
+                    >
+                      <option value="SEMUA">Semua Unit</option>
+                      {UNIT_KERJA_LIST.map((u) => (<option key={u} value={u}>{u}</option>))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-[#64748b] font-medium mb-2">
+                      <ClipboardCheck className="w-3 h-3" /> Tipe
+                    </label>
+                    <select
+                      value={mapFilterType}
+                      onChange={(e) => setMapFilterType(e.target.value)}
+                      className="apple-select text-xs py-2 px-3"
+                    >
+                      <option value="SEMUA">Semua</option>
+                      <option value="HADIR">Hadir</option>
+                      <option value="PULANG">Pulang</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Map Component */}
+              <AttendanceMap
+                filterDate={mapFilterDate}
+                filterUnit={mapFilterUnit}
+                filterType={mapFilterType}
+                allUnits={UNIT_KERJA_LIST}
+              />
             </div>
           )}
 
