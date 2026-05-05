@@ -20,6 +20,9 @@ model Attendance {
   latitude    Float?
   longitude   Float?
   locationAddress String?
+  gpsAccuracy     Float?   // GPS accuracy in meters (low = suspicious)
+  gpsTimestamp    DateTime? // Timestamp from GPS hardware (vs server time)
+  spoofFlags      String?  // JSON: array of detected spoof indicators
   createdAt   DateTime @default(now())
 }
 

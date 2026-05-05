@@ -51,6 +51,14 @@ export async function GET(request: NextRequest) {
     ]);
 
     // ============ MATCH HADIR/PULANG PER PERSON PER DAY ============
+    // Helper: Convert UTC Date to WIB hours/minutes
+    const toWIB = (date: Date) => {
+      const utcHours = date.getUTCHours();
+      const utcMinutes = date.getUTCMinutes();
+      const wibHours = (utcHours + 7) % 24;
+      return { hours: wibHours, minutes: utcMinutes, totalMinutes: wibHours * 60 + utcMinutes };
+    };
+
     interface PersonDayEntry {
       namaLengkap: string;
       dayKey: string;
@@ -61,7 +69,9 @@ export async function GET(request: NextRequest) {
     }
     const personDayMap = new Map<string, PersonDayEntry>();
     allAttendance.forEach(a => {
-      const dayKey = new Date(a.createdAt).toLocaleDateString('id-ID');
+      // Use WIB for day grouping (UTC+7)
+      const wibDate = new Date(a.createdAt.getTime() + 7 * 60 * 60 * 1000);
+      const dayKey = wibDate.toLocaleDateString('id-ID', { timeZone: 'UTC' });
       const key = `${a.namaLengkap}__${dayKey}`;
       if (!personDayMap.has(key)) {
         personDayMap.set(key, { namaLengkap: a.namaLengkap, dayKey, hadirTime: null, pulangTime: null, unitKerja: a.unitKerja, pesan: null });
@@ -106,9 +116,9 @@ export async function GET(request: NextRequest) {
       }
       const dStats = dayOvertimeMap.get(entry.dayKey)!;
 
-      // Check late (hadir > 08:00)
+      // Check late (hadir > 08:00 WIB)
       if (entry.hadirTime) {
-        const hadirMinutes = entry.hadirTime.getHours() * 60 + entry.hadirTime.getMinutes();
+        const hadirMinutes = toWIB(entry.hadirTime).totalMinutes;
         if (hadirMinutes > WORK_START_MINUTES) {
           pStats.lateCount++;
           pStats.isOnTime = false;
@@ -117,10 +127,10 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Check overtime: only if hadir <= 08:00 AND pulang >= 15:00
+      // Check overtime: only if hadir <= 08:00 WIB AND pulang >= 15:00 WIB
       if (entry.hadirTime && entry.pulangTime) {
-        const hadirMinutes = entry.hadirTime.getHours() * 60 + entry.hadirTime.getMinutes();
-        const pulangMinutes = entry.pulangTime.getHours() * 60 + entry.pulangTime.getMinutes();
+        const hadirMinutes = toWIB(entry.hadirTime).totalMinutes;
+        const pulangMinutes = toWIB(entry.pulangTime).totalMinutes;
 
         if (hadirMinutes <= WORK_START_MINUTES && pulangMinutes >= OVERTIME_THRESHOLD_MINUTES) {
           const lemburHours = Math.floor((pulangMinutes - OVERTIME_THRESHOLD_MINUTES) / 60);
@@ -132,8 +142,8 @@ export async function GET(request: NextRequest) {
             lemburRecords.push({
               namaLengkap: entry.namaLengkap,
               date: entry.dayKey,
-              hadirTime: entry.hadirTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-              pulangTime: entry.pulangTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+              hadirTime: toWIB(entry.hadirTime).hours.toString().padStart(2, '0') + ':' + toWIB(entry.hadirTime).minutes.toString().padStart(2, '0') + ' WIB',
+              pulangTime: toWIB(entry.pulangTime).hours.toString().padStart(2, '0') + ':' + toWIB(entry.pulangTime).minutes.toString().padStart(2, '0') + ' WIB',
               lemburHours,
             });
           }
@@ -148,17 +158,17 @@ export async function GET(request: NextRequest) {
     const uniqueHadirNames = new Set(hadirRecords.map(a => a.namaLengkap));
     const uniquePulangNames = new Set(pulangRecords.map(a => a.namaLengkap));
 
-    // Late stats (using minutes-based check)
+    // Late stats (using WIB time)
     const lateCheckIns = hadirRecords.filter(a => {
-      const minutes = new Date(a.createdAt).getHours() * 60 + new Date(a.createdAt).getMinutes();
+      const minutes = toWIB(new Date(a.createdAt)).totalMinutes;
       return minutes > WORK_START_MINUTES;
     });
     const uniqueLateNames = [...new Set(lateCheckIns.map(a => a.namaLengkap))];
 
-    // Peak hour
+    // Peak hour (using WIB)
     const hourMap = new Map<number, number>();
     hadirRecords.forEach(a => {
-      const hour = new Date(a.createdAt).getHours();
+      const hour = toWIB(new Date(a.createdAt)).hours;
       hourMap.set(hour, (hourMap.get(hour) || 0) + 1);
     });
     let peakHour = 0;
@@ -178,7 +188,8 @@ export async function GET(request: NextRequest) {
     // ============ PER-DAY BREAKDOWN ============
     const dayMap = new Map<string, { hadir: number; pulang: number; hadirNames: Set<string>; pulangNames: Set<string> }>();
     allAttendance.forEach(a => {
-      const day = new Date(a.createdAt).toLocaleDateString('id-ID', {
+      const wibDate = new Date(a.createdAt.getTime() + 7 * 60 * 60 * 1000);
+      const day = wibDate.toLocaleDateString('id-ID', {
         day: '2-digit',
         month: 'short',
         year: 'numeric',

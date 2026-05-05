@@ -75,8 +75,14 @@ interface AttendanceRecord {
   longitude: number | null;
   locationAddress: string | null;
   createdAt: string;
+  gpsAccuracy?: number | null;
+  gpsTimestamp?: string | null;
+  spoofFlags?: string | null;
   _distanceFromCampus?: number | null;
   _geoVerified?: boolean | null;
+  _spoofFlags?: string[] | null;
+  _isSuspicious?: boolean | null;
+  _wibTime?: string | null;
 }
 
 interface WFHRecord {
@@ -126,7 +132,7 @@ export default function PresensiPage() {
   const [pesan, setPesan] = useState("");
   const [photoData, setPhotoData] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [geoLocation, setGeoLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
+  const [geoLocation, setGeoLocation] = useState<{ lat: number; lng: number; address: string; accuracy: number | null; gpsTimestamp: number | null; spoofFlags: string[] } | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
 
   // WFH Form State
@@ -261,7 +267,50 @@ export default function PresensiPage() {
     }
   };
 
-  const requestGeoLocation = async (): Promise<{ lat: number; lng: number; address: string } | null> => {
+  /**
+   * Anti-Spoof: Client-side GPS spoof detection.
+   * Collects GPS accuracy, timestamp, and checks for common fake GPS patterns.
+   */
+  const detectClientSpoofing = (position: GeolocationPosition): string[] => {
+    const flags: string[] = [];
+    const acc = position.coords.accuracy;
+    const browserTime = Date.now();
+    const gpsTime = position.timestamp;
+    const diffMs = Math.abs(browserTime - gpsTime);
+
+    // Real GPS accuracy on phones: typically 5-50 meters.
+    // Fake GPS apps often report 0, 0.5, 1, or 2 meters.
+    if (acc === 0) {
+      flags.push('GPS_ACCURACY_EXACT_ZERO');
+    } else if (acc < 2) {
+      flags.push(`GPS_ACCURACY_TOO_LOW(${acc.toFixed(1)}m)`);
+    }
+
+    // GPS timestamp should be close to browser time (within ~30s).
+    // A big difference could mean timezone manipulation or spoofed GPS.
+    if (diffMs > 120000) { // > 2 minutes
+      flags.push(`TIME_MISMATCH(${Math.round(diffMs / 60000)}min)`);
+    }
+
+    // Fake GPS sometimes reports timestamp in the future (impossible for real GPS)
+    if (gpsTime > browserTime + 60000) {
+      flags.push('GPS_TIMESTAMP_IN_FUTURE');
+    }
+
+    // Check if altitude is exactly 0 (some fake GPS apps)
+    if (position.coords.altitude !== null && position.coords.altitude === 0) {
+      flags.push('ALTITUDE_EXACT_ZERO');
+    }
+
+    // Check if heading is exactly 0 with speed > 0 (impossible)
+    if (position.coords.heading !== null && position.coords.heading === 0 && position.coords.speed !== null && position.coords.speed > 0) {
+      flags.push('INVALID_HEADING_SPEED');
+    }
+
+    return flags;
+  };
+
+  const requestGeoLocation = async (): Promise<{ lat: number; lng: number; address: string; accuracy: number | null; gpsTimestamp: number | null; spoofFlags: string[] } | null> => {
     if (!navigator.geolocation) {
       toast({ title: "GPS tidak didukung browser ini", variant: "destructive" });
       return null;
@@ -273,7 +322,13 @@ export default function PresensiPage() {
         async (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
+          const accuracy = position.coords.accuracy;
+          const gpsTimestamp = position.timestamp;
           const address = await reverseGeocode(lat, lng);
+
+          // Client-side spoof detection
+          const spoofFlags = detectClientSpoofing(position);
+
           // Calculate geofence
           const dist = haversineDistance(lat, lng, CAMPUS_CENTER.lat, CAMPUS_CENTER.lng);
           setDistanceFromCampus(Math.round(dist));
@@ -282,8 +337,19 @@ export default function PresensiPage() {
           } else {
             setGeoFenceStatus('outside');
           }
+
           setIsGettingLocation(false);
-          resolve({ lat, lng, address });
+
+          // Warn user if spoofing detected
+          if (spoofFlags.length > 0) {
+            toast({
+              title: "Peringatan Fake GPS Terdeteksi",
+              description: `Indikasi: ${spoofFlags.join(', ')}. Matikan aplikasi fake GPS Anda.`,
+              variant: "destructive",
+            });
+          }
+
+          resolve({ lat, lng, address, accuracy, gpsTimestamp, spoofFlags });
         },
         (error) => {
           setIsGettingLocation(false);
@@ -440,14 +506,38 @@ export default function PresensiPage() {
       const res = await fetch("/api/attendance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ namaLengkap: namaLengkap.trim(), unitKerja, type, jenisKehadiran, pesan: pesan.trim() || null, photoData, latitude: geoLocation?.lat ?? null, longitude: geoLocation?.lng ?? null, locationAddress: geoLocation?.address ?? null }),
+        body: JSON.stringify({
+          namaLengkap: namaLengkap.trim(), unitKerja, type, jenisKehadiran,
+          pesan: pesan.trim() || null, photoData,
+          latitude: geoLocation?.lat ?? null,
+          longitude: geoLocation?.lng ?? null,
+          locationAddress: geoLocation?.address ?? null,
+          gpsAccuracy: geoLocation?.accuracy ?? null,
+          gpsTimestamp: geoLocation?.gpsTimestamp ?? null,
+          clientTime: new Date().toISOString(),
+          spoofFlags: geoLocation?.spoofFlags?.length ? geoLocation.spoofFlags : null,
+        }),
       });
       const json = await res.json();
       if (json.success) {
-        toast({ title: `${type === "HADIR" ? "Absensi Hadir" : "Absensi Pulang"} berhasil!`, description: `Data untuk ${namaLengkap.trim()} telah tersimpan` });
+        // Show server time info so user knows the real recorded time
+        const timeDesc = json.serverTimeWIB ? `Waktu server: ${json.serverTimeWIB}` : '';
+        const lateDesc = json.isLate && json.isLate !== 'Tidak' ? ` | ${json.isLate}` : '';
+        const spoofDesc = json.spoofWarning ? ` | Perhatian: ${json.spoofWarning.message}` : '';
+        toast({
+          title: `${type === "HADIR" ? "Absensi Hadir" : "Absensi Pulang"} berhasil!`,
+          description: `Data untuk ${namaLengkap.trim()} telah tersimpan. ${timeDesc}${lateDesc}${spoofDesc}`,
+          ...(json.spoofWarning ? { variant: "destructive" } : {}),
+        });
         setNamaLengkap(""); setUnitKerja(""); setJenisKehadiran(""); setPesan(""); setPhotoData(null); setGeoLocation(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
         fetchStats();
+      } else if (json.blocked) {
+        toast({
+          title: "Absensi Diblokir",
+          description: json.error,
+          variant: "destructive",
+        });
       } else { toast({ title: json.error || "Gagal menyimpan", variant: "destructive" }); }
     } catch { toast({ title: "Terjadi kesalahan", variant: "destructive" }); }
     finally { setIsSubmitting(false); }
@@ -493,10 +583,10 @@ export default function PresensiPage() {
     const wb = XLSX.utils.book_new();
 
     if (reportTab === "presensi") {
-      const headers = ["No", "Waktu", "Nama Lengkap", "Unit Kerja", "Tipe", "Jenis Kehadiran", "Lokasi", "Jarak (m)", "Geo Verifikasi", "Pesan"];
+      const headers = ["No", "Waktu (WIB)", "Nama Lengkap", "Unit Kerja", "Tipe", "Jenis Kehadiran", "Lokasi", "Jarak (m)", "Geo Verifikasi", "Fake GPS", "Pesan"];
       const rows = attendanceData.map((r, i) => [
         i + 1,
-        formatDateTime(r.createdAt),
+        r._wibTime || formatDateTime(r.createdAt),
         r.namaLengkap,
         r.unitKerja,
         r.type,
@@ -504,6 +594,7 @@ export default function PresensiPage() {
         r.locationAddress || "-",
         r._distanceFromCampus != null ? r._distanceFromCampus : "-",
         r._geoVerified ? "Ya" : r._distanceFromCampus != null ? "Di Luar Kampus" : "-",
+        r._isSuspicious ? `YA: ${r._spoofFlags?.join(', ')}` : "Tidak",
         r.pesan || "-"
       ]);
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
@@ -517,6 +608,7 @@ export default function PresensiPage() {
         { wch: 40 },
         { wch: 12 },
         { wch: 16 },
+        { wch: 30 },
         { wch: 35 },
       ];
       XLSX.utils.book_append_sheet(wb, ws, "Absensi");
@@ -1138,8 +1230,15 @@ export default function PresensiPage() {
                         <tbody>
                           {attendanceData.map((r) => (
                             <tr key={r.id}>
-                              <td className="whitespace-nowrap text-xs">{formatDateTime(r.createdAt)}</td>
-                              <td className="font-medium text-[#1e293b] text-sm">{r.namaLengkap}</td>
+                              <td className="whitespace-nowrap text-xs">{r._wibTime || formatDateTime(r.createdAt)}</td>
+                              <td className="font-medium text-[#1e293b] text-sm">
+                                {r._isSuspicious ? (
+                                  <span className="flex items-center gap-1.5">
+                                    <span className="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "#ef4444" }} title="Fake GPS terdeteksi" />
+                                    <span className="cursor-help" title={`Peringatan: ${r._spoofFlags?.join(', ')}`}>{r.namaLengkap}</span>
+                                  </span>
+                                ) : r.namaLengkap}
+                              </td>
                               <td className="hidden md:table-cell text-xs">{r.unitKerja}</td>
                               <td>
                                 <span className={`apple-badge ${r.type === "HADIR" ? "bg-[#005590]/15 text-[#005590]" : "bg-[#f59e0b]/15 text-[#d97706]"}`}>
@@ -1168,7 +1267,11 @@ export default function PresensiPage() {
                                 )}
                               </td>
                               <td className="hidden xl:table-cell text-center">
-                                {r._distanceFromCampus !== null && r._distanceFromCampus !== undefined ? (
+                                {r._isSuspicious ? (
+                                  <span className="apple-badge cursor-help" style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444' }} title={`Spoof terdeteksi: ${r._spoofFlags?.join(', ')}`}>
+                                    Spoof!
+                                  </span>
+                                ) : r._distanceFromCampus !== null && r._distanceFromCampus !== undefined ? (
                                   r._geoVerified ? (
                                     <span className="apple-badge bg-[#005590]/15 text-[#005590]">
                                       {r._distanceFromCampus}m
@@ -1182,7 +1285,14 @@ export default function PresensiPage() {
                                   <span className="text-xs text-[#64748b]/40">-</span>
                                 )}
                               </td>
-                              <td className="hidden lg:table-cell max-w-[200px]"><span className="text-xs text-[#64748b] line-clamp-2">{r.pesan || "-"}</span></td>
+                              <td className="hidden lg:table-cell max-w-[200px]">
+                                <span className="text-xs text-[#64748b] line-clamp-2">{r.pesan || "-"}</span>
+                                {r._isSuspicious && r._spoofFlags && r._spoofFlags.length > 0 && (
+                                  <span className="block mt-1 text-[10px] font-medium" style={{ color: "#ef4444" }}>
+                                    Fake GPS: {r._spoofFlags.join(', ')}
+                                  </span>
+                                )}
+                              </td>
                               <td className="text-center">
                                 {r.photoData ? (
                                   <button onClick={() => setSelectedPhoto(r.photoData)} className="inline-flex items-center justify-center w-8 h-8 rounded-xl transition-colors" style={{ background: "rgba(255,255,255,0.1)" }}>
