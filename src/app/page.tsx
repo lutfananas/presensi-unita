@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import jsPDF from "jspdf";
 import * as XLSX from "xlsx";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPie, Pie, Cell, Legend } from "recharts";
 
 // ============ CONSTANTS ============
 const UNIT_KERJA_LIST = [
@@ -698,7 +699,7 @@ export default function PresensiPage() {
             <div className="w-7 h-7 rounded-lg overflow-hidden flex-shrink-0">
               <Image src="/logo-universitas.png" alt="Logo" width={28} height={28} className="rounded-lg object-contain" />
             </div>
-            <span className="text-sm font-semibold text-[#005590] tracking-tight">Unita</span>
+            <span className="text-sm font-semibold text-[#ffffff] tracking-tight">Unita</span>
           </div>
 
           {/* Center Nav Links - Mobile: bottom bar, Desktop: pill nav */}
@@ -715,11 +716,11 @@ export default function PresensiPage() {
                   className={`nav-link flex items-center gap-1.5 ${activeTab === tab.id ? "active" : ""}`}>
                   <tab.icon className="w-3.5 h-3.5" />
                   <span>{tab.label}</span>
-                  {PROTECTED_TABS.includes(tab.id) && !isUnlocked && <Lock className="w-3 h-3 text-[#ffcb01]" />}
+                  {PROTECTED_TABS.includes(tab.id) && !isUnlocked && <Lock className="w-3 h-3 text-[#d97706]" />}
                 </button>
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 rounded-lg bg-white border border-blue-900 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                  <p className="text-[11px] font-medium text-white">{tab.desc}</p>
-                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 bg-white border-l border-t border-blue-900" />
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 rounded-lg bg-[#1e293b] border border-gray-700 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                  <p className="text-[11px] font-medium text-[#1e293b]">{tab.desc}</p>
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 bg-[#1e293b] border-l border-t border-gray-700" />
                 </div>
               </div>
             ))}
@@ -727,8 +728,8 @@ export default function PresensiPage() {
 
           {/* Right side: Online status */}
           <div className="hidden md:flex items-center gap-2">
-            <div className="pulse-dot w-1.5 h-1.5 rounded-full" style={{ background: "#ffcb01" }} />
-            <span className="text-[10px] text-white/70">Online</span>
+            <div className="pulse-dot w-1.5 h-1.5 rounded-full" style={{ background: "#22c55e" }} />
+            <span className="text-[10px] text-[#64748b]">Online</span>
           </div>
         </div>
       </nav>
@@ -743,24 +744,24 @@ export default function PresensiPage() {
           ]).map((tab) => (
             <button key={tab.id} onClick={() => handleTabSwitch(tab.id)}
               className="mobile-nav-btn flex flex-col items-center gap-0.5 py-1.5 px-3 rounded-xl">
-              <tab.icon className={`w-5 h-5 ${activeTab === tab.id ? "text-[#ffcb01]" : "text-white/60"}`} />
-              <span className={`text-[10px] font-medium ${activeTab === tab.id ? "text-[#ffcb01]" : "text-white/60"}`}>{tab.label}</span>
-              {activeTab === tab.id && <div className="w-1 h-1 rounded-full bg-[#ffcb01]" />}
+              <tab.icon className={`w-5 h-5 ${activeTab === tab.id ? "text-[#005590]" : "text-[#94a3b8]"}`} />
+              <span className={`text-[10px] font-medium ${activeTab === tab.id ? "text-[#005590]" : "text-[#94a3b8]"}`}>{tab.label}</span>
+              {activeTab === tab.id && <div className="w-1 h-1 rounded-full bg-[#005590]" />}
             </button>
           ))}
         </div>
       </div>
 
       {/* ===== Main Page Content ===== */}
-      <div className="min-h-screen flex flex-col" style={{ background: "#004a7e" }}>
+      <div className="min-h-screen flex flex-col" style={{ background: "#f5f7fa" }}>
       <main className="flex-1 apple-main">
         {/* Hero Section */}
         <section className="relative text-center px-4 sm:px-6 pb-6 sm:pb-10">
           <div className="relative z-10 animate-fade-in-up">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-3">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-[#1e293b] mb-3">
               Universitas Tulungagung
             </h1>
-            <p className="text-sm sm:text-base md:text-lg text-[#ffcb01] font-medium max-w-xl mx-auto">
+            <p className="text-sm sm:text-base md:text-lg text-[#005590] font-medium max-w-xl mx-auto">
               Sistem Presensi Digital
             </p>
           </div>
@@ -773,10 +774,10 @@ export default function PresensiPage() {
           {stats && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-12 animate-fade-in-up">
               {[
-                { val: stats.today.hadir, label: "Hadir Hari Ini", icon: LogIn, color: "rgba(255, 255, 255, 0.1)", iconColor: "#ffffff" },
-                { val: stats.today.pulang, label: "Pulang Hari Ini", icon: LogOut, color: "rgba(255, 203, 1, 0.2)", iconColor: "#ffcb01" },
-                { val: stats.today.uniquePeople, label: "Jumlah Hari Ini", icon: Users, color: "rgba(255, 255, 255, 0.1)", iconColor: "#ffffff" },
-                { val: stats.totals.wfh, label: "Total WFH", icon: Activity, color: "rgba(255, 203, 1, 0.2)", iconColor: "#ffcb01" },
+                { val: stats.today.hadir, label: "Hadir Hari Ini", icon: LogIn, color: "rgba(0, 85, 144, 0.08)", iconColor: "#005590" },
+                { val: stats.today.pulang, label: "Pulang Hari Ini", icon: LogOut, color: "rgba(245, 158, 11, 0.08)", iconColor: "#d97706" },
+                { val: stats.today.uniquePeople, label: "Jumlah Hari Ini", icon: Users, color: "rgba(0, 85, 144, 0.08)", iconColor: "#005590" },
+                { val: stats.totals.wfh, label: "Total WFH", icon: Activity, color: "rgba(245, 158, 11, 0.08)", iconColor: "#d97706" },
               ].map((s, i) => (
                 <div key={i} className={`stat-card-apple p-3 sm:p-6 animate-fade-in-up animate-fade-in-up-d${i + 1}`}>
                   <div className="flex items-center gap-3 sm:gap-4">
@@ -784,8 +785,8 @@ export default function PresensiPage() {
                       <s.icon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: s.iconColor }} />
                     </div>
                     <div>
-                      <p className="text-xl sm:text-2xl font-bold text-white">{s.val}</p>
-                      <p className="text-[10px] sm:text-xs text-white/70 mt-0.5">{s.label}</p>
+                      <p className="text-xl sm:text-2xl font-bold text-[#1e293b]">{s.val}</p>
+                      <p className="text-[10px] sm:text-xs text-[#64748b] mt-0.5">{s.label}</p>
                     </div>
                   </div>
                 </div>
@@ -810,8 +811,8 @@ export default function PresensiPage() {
 
               {/* Attendance Form */}
               <div className="apple-card p-5 sm:p-6 md:p-10">
-                <h2 className="text-xl sm:text-2xl font-bold text-white mb-6 sm:mb-8 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(255, 255, 255, 0.1)" }}>
+                <h2 className="text-xl sm:text-2xl font-bold text-[#1e293b] mb-6 sm:mb-8 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(0, 85, 144, 0.06)" }}>
                     <ClipboardList className="w-4.5 h-4.5 text-[#005590]" />
                   </div>
                   Form Presensi
@@ -819,34 +820,34 @@ export default function PresensiPage() {
                 <div className="space-y-5 sm:space-y-7">
                   {/* Nama Lengkap */}
                   <div>
-                    <label className="flex items-center gap-2 text-[10px] sm:text-xs uppercase tracking-widest text-white/70 font-medium mb-2.5 sm:mb-3">
+                    <label className="flex items-center gap-2 text-[10px] sm:text-xs uppercase tracking-widest text-[#64748b] font-medium mb-2.5 sm:mb-3">
                       <User className="w-3.5 h-3.5" />
-                      Nama Lengkap <span style={{ color: "#ffcb01" }}>*</span>
-                      <span className="normal-case tracking-normal text-white/70/60 ml-1">(tanpa gelar)</span>
+                      Nama Lengkap <span style={{ color: "#d97706" }}>*</span>
+                      <span className="normal-case tracking-normal text-[#64748b]/60 ml-1">(tanpa gelar)</span>
                     </label>
                     <input type="text" value={namaLengkap} onChange={(e) => setNamaLengkap(e.target.value)} placeholder="Masukkan nama lengkap tanpa gelar" className="apple-input" />
                   </div>
 
                   {/* Unit Kerja */}
                   <div>
-                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-white/70 font-medium mb-3">
+                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#64748b] font-medium mb-3">
                       <Building2 className="w-3.5 h-3.5" />
-                      Unit Kerja <span style={{ color: "#ffcb01" }}>*</span>
+                      Unit Kerja <span style={{ color: "#d97706" }}>*</span>
                     </label>
                     <div className="relative">
                       <select value={unitKerja} onChange={(e) => setUnitKerja(e.target.value)} className="apple-select">
                         <option value="">-- Pilih Unit Kerja --</option>
                         {UNIT_KERJA_LIST.map((unit) => (<option key={unit} value={unit}>{unit}</option>))}
                       </select>
-                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60 pointer-events-none" />
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a3b8] pointer-events-none" />
                     </div>
                   </div>
 
                   {/* Jenis Kehadiran */}
                   <div>
-                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-white/70 font-medium mb-3">
+                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#64748b] font-medium mb-3">
                       <ClipboardCheck className="w-3.5 h-3.5" />
-                      Jenis Kehadiran <span style={{ color: "#ffcb01" }}>*</span>
+                      Jenis Kehadiran <span style={{ color: "#d97706" }}>*</span>
                     </label>
                     <div className="relative">
                       <select value={jenisKehadiran} onChange={(e) => setJenisKehadiran(e.target.value)} className="apple-select">
@@ -857,23 +858,23 @@ export default function PresensiPage() {
                         <option value="Dinas Luar Kampus - Pengabdian kepada Masyarakat">Dinas Luar Kampus - Pengabdian kepada Masyarakat</option>
                         <option value="Study Lanjut">Study Lanjut</option>
                       </select>
-                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60 pointer-events-none" />
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a3b8] pointer-events-none" />
                     </div>
                   </div>
 
                   {/* Pesan */}
                   <div>
-                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-white/70 font-medium mb-3">
+                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#64748b] font-medium mb-3">
                       <MessageSquare className="w-3.5 h-3.5" />
                       Pesan
-                      <span className="normal-case tracking-normal text-white/70/60 ml-1">(opsional)</span>
+                      <span className="normal-case tracking-normal text-[#64748b]/60 ml-1">(opsional)</span>
                     </label>
                     <textarea value={pesan} onChange={(e) => setPesan(e.target.value)} placeholder="Contoh: Terlambat karena praktikum jam 12, izin pulang awal karena sakit, dll." rows={3} className="apple-textarea" />
                   </div>
 
                   {/* Photo / GeoTag */}
                   <div>
-                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-white/70 font-medium mb-3">
+                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#64748b] font-medium mb-3">
                       <Camera className="w-3.5 h-3.5" />
                       Foto Selfie Geotag
                     </label>
@@ -883,28 +884,28 @@ export default function PresensiPage() {
                       {geoLocation ? (
                         <div className="space-y-2">
                           <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{
-                            background: geoFenceStatus === 'outside' ? "rgba(255, 203, 1, 0.1)" : "rgba(255, 255, 255, 0.08)",
+                            background: geoFenceStatus === 'outside' ? "rgba(255, 203, 1, 0.1)" : "rgba(0, 85, 144, 0.04)",
                             border: geoFenceStatus === 'outside' ? "1px solid rgba(255, 203, 1, 0.3)" : "1px solid rgba(0, 85, 144, 0.15)",
                           }}>
-                            <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: geoFenceStatus === 'outside' ? "#e6b800" : "#005590" }} />
+                            <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: geoFenceStatus === 'outside' ? "#d97706" : "#005590" }} />
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium" style={{ color: geoFenceStatus === 'outside' ? "#e6b800" : "#005590" }}>
+                              <p className="text-xs font-medium" style={{ color: geoFenceStatus === 'outside' ? "#d97706" : "#005590" }}>
                                 {geoFenceStatus === 'inside' ? 'Lokasi aktif - Area Kampus' : geoFenceStatus === 'outside' ? 'Di luar Area Kampus' : 'Lokasi aktif'}
                               </p>
-                              <p className="text-xs text-white/70 truncate">{geoLocation.address}</p>
+                              <p className="text-xs text-[#64748b] truncate">{geoLocation.address}</p>
                             </div>
-                            <button onClick={() => { setGeoLocation(null); setGeoFenceStatus(null); setDistanceFromCampus(null); }} className="text-white/60 hover:text-[#005590] transition-colors flex-shrink-0"><X className="w-3.5 h-3.5" /></button>
+                            <button onClick={() => { setGeoLocation(null); setGeoFenceStatus(null); setDistanceFromCampus(null); }} className="text-[#94a3b8] hover:text-[#005590] transition-colors flex-shrink-0"><X className="w-3.5 h-3.5" /></button>
                           </div>
                           {geoFenceStatus === 'outside' && distanceFromCampus !== null && jenisKehadiran.includes('Kampus') && (
-                            <div className="px-4 py-3 rounded-xl" style={{ background: "rgba(255, 203, 1, 0.08)", border: "1px solid rgba(255, 203, 1, 0.2)" }}>
-                              <p className="text-xs font-medium" style={{ color: "#e6b800" }}>
+                            <div className="px-4 py-3 rounded-xl" style={{ background: "rgba(245, 158, 11, 0.06)", border: "1px solid rgba(245, 158, 11, 0.1)" }}>
+                              <p className="text-xs font-medium" style={{ color: "#d97706" }}>
                                 Perhatian: Anda berada {distanceFromCampus}m dari kampus. Absensi tetap tersimpan, namun akan ditandai di Laporan.
                               </p>
-                              <p className="text-[10px] text-white/70 mt-1">Jika Anda sedang Dinas Luar Kampus, pilih Jenis Kehadiran "Dinas Luar Kampus" pada dropdown di atas.</p>
+                              <p className="text-[10px] text-[#64748b] mt-1">Jika Anda sedang Dinas Luar Kampus, pilih Jenis Kehadiran "Dinas Luar Kampus" pada dropdown di atas.</p>
                             </div>
                           )}
                           {geoFenceStatus === 'inside' && distanceFromCampus !== null && (
-                            <p className="text-[10px] text-white/70 px-1">
+                            <p className="text-[10px] text-[#64748b] px-1">
                               Jarak dari kampus: {distanceFromCampus}m (dalam radius {ALLOWED_RADIUS}m)
                             </p>
                           )}
@@ -914,7 +915,7 @@ export default function PresensiPage() {
                           {isGettingLocation ? <Loader2 className="w-4 h-4 animate-spin" style={{ color: "#005590" }} /> : <MapPin className="w-4 h-4" style={{ color: "#005590" }} />}
                           <div className="flex-1">
                             <p className="text-xs font-medium" style={{ color: "#005590" }}>{isGettingLocation ? "Mencari lokasi GPS..." : "Aktifkan Lokasi (GeoTag)"}</p>
-                            <p className="text-xs text-white/70">{isGettingLocation ? "Mohon tunggu, sedang verifikasi area..." : "Lokasi akan diverifikasi apakah di area kampus"}</p>
+                            <p className="text-xs text-[#64748b]">{isGettingLocation ? "Mohon tunggu, sedang verifikasi area..." : "Lokasi akan diverifikasi apakah di area kampus"}</p>
                           </div>
                         </button>
                       )}
@@ -926,21 +927,21 @@ export default function PresensiPage() {
                         <div className="photo-preview-container mx-auto w-40 h-52 mb-3 relative">
                           <img src={photoData} alt="Preview" className="w-full h-full object-cover rounded-xl" />
                           <div className="absolute bottom-0 left-0 right-0 text-center py-1.5 rounded-b-xl" style={{ background: "rgba(0,0,0,0.6)" }}>
-                            <p className="text-[10px] font-medium" style={{ color: "#ffcb01" }}>GeoTag Aktif</p>
+                            <p className="text-[10px] font-medium" style={{ color: "#d97706" }}>GeoTag Aktif</p>
                           </div>
                         </div>
                       ) : (
                         <div className="flex flex-col items-center gap-3">
-                          <div className="photo-placeholder-icon w-16 h-16 rounded-xl flex items-center justify-center" style={{ background: "rgba(255, 255, 255, 0.08)" }}>
-                            <Camera className="w-8 h-8" style={{ color: "rgba(255,255,255,0.6)" }} />
+                          <div className="photo-placeholder-icon w-16 h-16 rounded-xl flex items-center justify-center" style={{ background: "rgba(0, 85, 144, 0.04)" }}>
+                            <Camera className="w-8 h-8" style={{ color: "#94a3b8" }} />
                           </div>
-                          <p className="text-sm text-white/70">Klik untuk ambil / Upload foto selfie</p>
-                          <p className="text-xs text-white/70/60">{geoLocation ? "Foto akan dilengkapi GeoTag (waktu & lokasi)" : "Aktifkan lokasi di atas untuk GeoTag"}</p>
+                          <p className="text-sm text-[#64748b]">Klik untuk ambil / Upload foto selfie</p>
+                          <p className="text-xs text-[#64748b]/60">{geoLocation ? "Foto akan dilengkapi GeoTag (waktu & lokasi)" : "Aktifkan lokasi di atas untuk GeoTag"}</p>
                         </div>
                       )}
                       {photoData && (
-                        <button onClick={(e) => { e.stopPropagation(); setPhotoData(null); if (fileInputRef.current) fileInputRef.current.value = ""; }} className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-colors z-10" style={{ background: "rgba(255, 255, 255, 0.2)" }}>
-                          <X className="w-4 h-4 text-white" />
+                        <button onClick={(e) => { e.stopPropagation(); setPhotoData(null); if (fileInputRef.current) fileInputRef.current.value = ""; }} className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-colors z-10" style={{ background: "rgba(0, 85, 144, 0.1)" }}>
+                          <X className="w-4 h-4 text-[#1e293b]" />
                         </button>
                       )}
                       <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoCapture} className="hidden" />
@@ -968,40 +969,40 @@ export default function PresensiPage() {
             <div className="animate-fade-in-up space-y-5 sm:space-y-8">
               <div className="apple-card p-5 sm:p-6 md:p-10">
                 <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
-                  <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255, 203, 1, 0.12)" }}>
-                    <Activity className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: "#ffcb01" }} />
+                  <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center" style={{ background: "rgba(245, 158, 11, 0.08)" }}>
+                    <Activity className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: "#d97706" }} />
                   </div>
                   <div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-white">Submit Aktivitas WFH</h2>
-                    <p className="text-xs text-white/70 mt-0.5">Catat aktivitas pekerjaan dari rumah Anda</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-[#1e293b]">Submit Aktivitas WFH</h2>
+                    <p className="text-xs text-[#64748b] mt-0.5">Catat aktivitas pekerjaan dari rumah Anda</p>
                   </div>
                 </div>
                 <div className="space-y-7">
                   <div>
-                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-white/70 font-medium mb-3">
+                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#64748b] font-medium mb-3">
                       <User className="w-3.5 h-3.5" />
-                      Nama Lengkap <span style={{ color: "#e6b800" }}>*</span>
-                      <span className="normal-case tracking-normal text-white/70/60 ml-1">(tanpa gelar)</span>
+                      Nama Lengkap <span style={{ color: "#d97706" }}>*</span>
+                      <span className="normal-case tracking-normal text-[#64748b]/60 ml-1">(tanpa gelar)</span>
                     </label>
                     <input type="text" value={wfhNama} onChange={(e) => setWfhNama(e.target.value)} placeholder="Masukkan nama lengkap tanpa gelar" className="apple-input" />
                   </div>
                   <div>
-                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-white/70 font-medium mb-3">
+                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#64748b] font-medium mb-3">
                       <Building2 className="w-3.5 h-3.5" />
-                      Unit Kerja <span style={{ color: "#e6b800" }}>*</span>
+                      Unit Kerja <span style={{ color: "#d97706" }}>*</span>
                     </label>
                     <div className="relative">
                       <select value={wfhUnit} onChange={(e) => setWfhUnit(e.target.value)} className="apple-select">
-                        <option value="" style={{ background: "#ffffff", color: "rgba(255,255,255,0.7)" }}>-- Pilih Unit Kerja --</option>
-                        {UNIT_KERJA_LIST.map((unit) => (<option key={unit} value={unit} style={{ background: "#005590" }}>{unit}</option>))}
+                        <option value="" style={{ background: "#ffffff", color: "#64748b" }}>-- Pilih Unit Kerja --</option>
+                        {UNIT_KERJA_LIST.map((unit) => (<option key={unit} value={unit} style={{ background: "#ffffff" }}>{unit}</option>))}
                       </select>
-                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/70 pointer-events-none" />
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b] pointer-events-none" />
                     </div>
                   </div>
                   <div>
-                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-white/70 font-medium mb-3">
+                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#64748b] font-medium mb-3">
                       <ClipboardList className="w-3.5 h-3.5" />
-                      Deskripsi Pekerjaan <span style={{ color: "#e6b800" }}>*</span>
+                      Deskripsi Pekerjaan <span style={{ color: "#d97706" }}>*</span>
                     </label>
                     <textarea value={wfhDeskripsi} onChange={(e) => setWfhDeskripsi(e.target.value)} placeholder="Jelaskan aktivitas pekerjaan yang Anda lakukan saat WFH..." rows={5} className="apple-textarea" />
                   </div>
@@ -1015,19 +1016,19 @@ export default function PresensiPage() {
               {/* Recent WFH */}
               {stats && stats.recent.wfh.length > 0 && (
                 <div className="apple-card p-6 md:p-8">
-                  <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-white/70" />
+                  <h3 className="text-lg font-semibold text-[#1e293b] mb-6 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-[#64748b]" />
                     Aktivitas WFH Terbaru
                   </h3>
                   <div className="space-y-3">
                     {stats.recent.wfh.map((item) => (
-                      <div key={item.id} className="p-4 rounded-2xl" style={{ background: "rgba(255, 255, 255, 0.05)", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                      <div key={item.id} className="p-4 rounded-2xl" style={{ background: "rgba(0, 85, 144, 0.03)", border: "1px solid rgba(0, 85, 144, 0.04)" }}>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-white text-sm">{item.namaLengkap}</span>
-                          <span className="text-xs text-white/70">{item.unitKerja}</span>
+                          <span className="font-medium text-[#1e293b] text-sm">{item.namaLengkap}</span>
+                          <span className="text-xs text-[#64748b]">{item.unitKerja}</span>
                         </div>
-                        <p className="text-xs text-white/70 line-clamp-2">{item.deskripsiPekerjaan}</p>
-                        <p className="text-xs text-white/70/60 mt-2">{formatDateTime(item.createdAt)}</p>
+                        <p className="text-xs text-[#64748b] line-clamp-2">{item.deskripsiPekerjaan}</p>
+                        <p className="text-xs text-[#64748b]/60 mt-2">{formatDateTime(item.createdAt)}</p>
                       </div>
                     ))}
                   </div>
@@ -1058,41 +1059,41 @@ export default function PresensiPage() {
               {/* Filter Card */}
               <div className="apple-card p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <Filter className="w-4 h-4 text-white/70" />
-                  <span className="text-xs uppercase tracking-widest text-white/70 font-medium">Filter</span>
+                  <Filter className="w-4 h-4 text-[#64748b]" />
+                  <span className="text-xs uppercase tracking-widest text-[#64748b] font-medium">Filter</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 filter-grid">
                   <div>
-                    <label className="text-[10px] uppercase tracking-widest text-white/70 mb-2 block font-medium">Tanggal</label>
+                    <label className="text-[10px] uppercase tracking-widest text-[#64748b] mb-2 block font-medium">Tanggal</label>
                     <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="apple-input text-sm" />
                   </div>
                   <div>
-                    <label className="text-[10px] uppercase tracking-widest text-white/70 mb-2 block font-medium">Unit Kerja</label>
+                    <label className="text-[10px] uppercase tracking-widest text-[#64748b] mb-2 block font-medium">Unit Kerja</label>
                     <div className="relative">
                       <select value={filterUnit} onChange={(e) => setFilterUnit(e.target.value)} className="apple-select text-sm">
-                        <option value="SEMUA" style={{ background: "#005590" }}>Semua Unit</option>
-                        {UNIT_KERJA_LIST.map((u) => (<option key={u} value={u} style={{ background: "#005590" }}>{u}</option>))}
+                        <option value="SEMUA" style={{ background: "#ffffff" }}>Semua Unit</option>
+                        {UNIT_KERJA_LIST.map((u) => (<option key={u} value={u} style={{ background: "#ffffff" }}>{u}</option>))}
                       </select>
-                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/70 pointer-events-none" />
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#64748b] pointer-events-none" />
                     </div>
                   </div>
                   {reportTab === "presensi" && (
                     <div>
-                      <label className="text-[10px] uppercase tracking-widest text-white/70 mb-2 block font-medium">Tipe</label>
+                      <label className="text-[10px] uppercase tracking-widest text-[#64748b] mb-2 block font-medium">Tipe</label>
                       <div className="relative">
                         <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="apple-select text-sm">
-                          <option value="SEMUA" style={{ background: "#005590" }}>Semua Tipe</option>
-                          <option value="HADIR" style={{ background: "#005590" }}>Hadir</option>
-                          <option value="PULANG" style={{ background: "#005590" }}>Pulang</option>
+                          <option value="SEMUA" style={{ background: "#ffffff" }}>Semua Tipe</option>
+                          <option value="HADIR" style={{ background: "#ffffff" }}>Hadir</option>
+                          <option value="PULANG" style={{ background: "#ffffff" }}>Pulang</option>
                         </select>
-                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/70 pointer-events-none" />
+                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#64748b] pointer-events-none" />
                       </div>
                     </div>
                   )}
                   <div>
-                    <label className="text-[10px] uppercase tracking-widest text-white/70 mb-2 block font-medium">Cari Nama</label>
+                    <label className="text-[10px] uppercase tracking-widest text-[#64748b] mb-2 block font-medium">Cari Nama</label>
                     <div className="relative">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/70" />
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#64748b]" />
                       <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Cari nama..." className="apple-input text-sm" style={{ paddingLeft: "36px" }} />
                     </div>
                   </div>
@@ -1100,7 +1101,7 @@ export default function PresensiPage() {
               </div>
 
               {/* Results count */}
-              <p className="text-xs text-white/70 px-2">
+              <p className="text-xs text-[#64748b] px-2">
                 {reportTab === "presensi" ? `Menampilkan ${attendanceData.length} data absensi` : `Menampilkan ${wfhData.length} data WFH`}
               </p>
 
@@ -1108,12 +1109,12 @@ export default function PresensiPage() {
               {reportTab === "presensi" && (
                 <div className="apple-card overflow-hidden rounded-2xl">
                   {isLoadingData ? (
-                    <div className="p-16 text-center text-white/70">
+                    <div className="p-16 text-center text-[#64748b]">
                       <div className="animate-spin w-8 h-8 border-2 rounded-full mx-auto mb-4" style={{ borderColor: "rgba(0, 85, 144, 0.3)", borderTopColor: "#005590" }} />
                       <p className="text-sm">Memuat data...</p>
                     </div>
                   ) : attendanceData.length === 0 ? (
-                    <div className="p-16 text-center text-white/70">
+                    <div className="p-16 text-center text-[#64748b]">
                       <ClipboardList className="w-12 h-12 mx-auto mb-4 opacity-20" />
                       <p className="text-sm">Belum ada data absensi</p>
                     </div>
@@ -1138,15 +1139,15 @@ export default function PresensiPage() {
                           {attendanceData.map((r) => (
                             <tr key={r.id}>
                               <td className="whitespace-nowrap text-xs">{formatDateTime(r.createdAt)}</td>
-                              <td className="font-medium text-white text-sm">{r.namaLengkap}</td>
+                              <td className="font-medium text-[#1e293b] text-sm">{r.namaLengkap}</td>
                               <td className="hidden md:table-cell text-xs">{r.unitKerja}</td>
                               <td>
-                                <span className={`apple-badge ${r.type === "HADIR" ? "bg-[#005590]/15 text-[#005590]" : "bg-[#e6b800]/15 text-[#e6b800]"}`}>
+                                <span className={`apple-badge ${r.type === "HADIR" ? "bg-[#005590]/15 text-[#005590]" : "bg-[#f59e0b]/15 text-[#d97706]"}`}>
                                   {r.type === "HADIR" ? <LogIn className="w-3 h-3 mr-1" /> : <LogOut className="w-3 h-3 mr-1" />}{r.type}
                                 </span>
                               </td>
                               <td className="hidden lg:table-cell">
-                                <span className={`apple-badge ${r.jenisKehadiran && r.jenisKehadiran.includes('Dinas') ? "bg-[#ffcb01]/15 text-[#ffcb01]" : "bg-[#005590]/15 text-[#005590]"}`}>
+                                <span className={`apple-badge ${r.jenisKehadiran && r.jenisKehadiran.includes('Dinas') ? "bg-[#f59e0b]/15 text-[#d97706]" : "bg-[#005590]/15 text-[#005590]"}`}>
                                   {r.jenisKehadiran || "Masuk Kerja Kampus"}
                                 </span>
                               </td>
@@ -1163,7 +1164,7 @@ export default function PresensiPage() {
                                     <span className="truncate max-w-[120px]">{r.locationAddress.split(',')[0]}</span>
                                   </a>
                                 ) : (
-                                  <span className="text-xs text-white/70/40">-</span>
+                                  <span className="text-xs text-[#64748b]/40">-</span>
                                 )}
                               </td>
                               <td className="hidden xl:table-cell text-center">
@@ -1173,27 +1174,27 @@ export default function PresensiPage() {
                                       {r._distanceFromCampus}m
                                     </span>
                                   ) : (
-                                    <span className="apple-badge bg-[#e6b800]/15 text-[#e6b800] cursor-help" title={`Di luar area kampus (${r._distanceFromCampus}m). Periksa foto untuk verifikasi.`}>
+                                    <span className="apple-badge bg-[#f59e0b]/15 text-[#005590] cursor-help" title={`Di luar area kampus (${r._distanceFromCampus}m). Periksa foto untuk verifikasi.`}>
                                       {r._distanceFromCampus}m !
                                     </span>
                                   )
                                 ) : (
-                                  <span className="text-xs text-white/70/40">-</span>
+                                  <span className="text-xs text-[#64748b]/40">-</span>
                                 )}
                               </td>
-                              <td className="hidden lg:table-cell max-w-[200px]"><span className="text-xs text-white/70 line-clamp-2">{r.pesan || "-"}</span></td>
+                              <td className="hidden lg:table-cell max-w-[200px]"><span className="text-xs text-[#64748b] line-clamp-2">{r.pesan || "-"}</span></td>
                               <td className="text-center">
                                 {r.photoData ? (
                                   <button onClick={() => setSelectedPhoto(r.photoData)} className="inline-flex items-center justify-center w-8 h-8 rounded-xl transition-colors" style={{ background: "rgba(255,255,255,0.1)" }}>
                                     <Eye className="w-4 h-4" style={{ color: "#005590" }} />
                                   </button>
                                 ) : (
-                                  <span className="text-xs text-white/70/40">-</span>
+                                  <span className="text-xs text-[#64748b]/40">-</span>
                                 )}
                               </td>
                               <td className="text-center">
                                 <button onClick={() => handleDeleteRecord(r.id)} className="inline-flex items-center justify-center w-8 h-8 rounded-xl transition-colors" style={{ background: "rgba(255, 203, 1, 0.1)" }}>
-                                  <Trash2 className="w-4 h-4" style={{ color: "#e6b800" }} />
+                                  <Trash2 className="w-4 h-4" style={{ color: "#d97706" }} />
                                 </button>
                               </td>
                             </tr>
@@ -1209,12 +1210,12 @@ export default function PresensiPage() {
               {reportTab === "wfh" && (
                 <div className="apple-card overflow-hidden rounded-2xl">
                   {isLoadingData ? (
-                    <div className="p-16 text-center text-white/70">
-                      <div className="animate-spin w-8 h-8 border-2 rounded-full mx-auto mb-4" style={{ borderColor: "rgba(255, 203, 1, 0.3)", borderTopColor: "#ffcb01" }} />
+                    <div className="p-16 text-center text-[#64748b]">
+                      <div className="animate-spin w-8 h-8 border-2 rounded-full mx-auto mb-4" style={{ borderColor: "rgba(0, 85, 144, 0.2)", borderTopColor: "#005590" }} />
                       <p className="text-sm">Memuat data...</p>
                     </div>
                   ) : wfhData.length === 0 ? (
-                    <div className="p-16 text-center text-white/70">
+                    <div className="p-16 text-center text-[#64748b]">
                       <Activity className="w-12 h-12 mx-auto mb-4 opacity-20" />
                       <p className="text-sm">Belum ada data WFH</p>
                     </div>
@@ -1233,9 +1234,9 @@ export default function PresensiPage() {
                           {wfhData.map((r) => (
                             <tr key={r.id}>
                               <td className="whitespace-nowrap text-xs">{formatDateTime(r.createdAt)}</td>
-                              <td className="font-medium text-white text-sm">{r.namaLengkap}</td>
+                              <td className="font-medium text-[#1e293b] text-sm">{r.namaLengkap}</td>
                               <td className="hidden md:table-cell text-xs">{r.unitKerja}</td>
-                              <td className="max-w-[300px]"><span className="text-xs text-white/70">{r.deskripsiPekerjaan}</span></td>
+                              <td className="max-w-[300px]"><span className="text-xs text-[#64748b]">{r.deskripsiPekerjaan}</span></td>
                             </tr>
                           ))}
                         </tbody>
@@ -1254,12 +1255,12 @@ export default function PresensiPage() {
               {/* Period & Filter */}
               <div className="apple-card p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <TrendingUp className="w-4 h-4 text-white/70" />
-                  <span className="text-xs uppercase tracking-widest text-white/70 font-medium">Analisa Kehadiran</span>
+                  <TrendingUp className="w-4 h-4 text-[#64748b]" />
+                  <span className="text-xs uppercase tracking-widest text-[#64748b] font-medium">Analisa Kehadiran</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <label className="text-[10px] uppercase tracking-widest text-white/70 mb-3 block font-medium">Periode</label>
+                    <label className="text-[10px] uppercase tracking-widest text-[#64748b] mb-3 block font-medium">Periode</label>
                     <div className="pill-toggle">
                       {([["daily", "Harian"], ["weekly", "Mingguan"], ["monthly", "Bulanan"]] as [AnalisaPeriod, string][]).map(([val, lbl]) => (
                         <button key={val} onClick={() => setAnalisaPeriod(val)} className={`pill-toggle-item ${analisaPeriod === val ? "active" : ""}`}>
@@ -1269,18 +1270,18 @@ export default function PresensiPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] uppercase tracking-widest text-white/70 mb-3 block font-medium">Unit Kerja</label>
+                    <label className="text-[10px] uppercase tracking-widest text-[#64748b] mb-3 block font-medium">Unit Kerja</label>
                     <div className="relative">
                       <select value={analisaUnit} onChange={(e) => setAnalisaUnit(e.target.value)} className="apple-select text-sm">
-                        <option value="SEMUA" style={{ background: "#005590" }}>Semua Unit</option>
-                        {UNIT_KERJA_LIST.map((u) => (<option key={u} value={u} style={{ background: "#005590" }}>{u}</option>))}
+                        <option value="SEMUA" style={{ background: "#ffffff" }}>Semua Unit</option>
+                        {UNIT_KERJA_LIST.map((u) => (<option key={u} value={u} style={{ background: "#ffffff" }}>{u}</option>))}
                       </select>
-                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/70 pointer-events-none" />
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#64748b] pointer-events-none" />
                     </div>
                   </div>
                 </div>
                 {analysisData && (
-                  <p className="text-xs text-white/70/60 mt-4 flex items-center gap-1.5">
+                  <p className="text-xs text-[#64748b]/60 mt-4 flex items-center gap-1.5">
                     <Calendar className="w-3 h-3" />{analysisData.periodLabel}
                   </p>
                 )}
@@ -1301,12 +1302,12 @@ export default function PresensiPage() {
               </div>
 
               {isLoadingAnalysis ? (
-                <div className="p-20 text-center text-white/70">
+                <div className="p-20 text-center text-[#64748b]">
                   <div className="animate-spin w-10 h-10 border-2 rounded-full mx-auto mb-4" style={{ borderColor: "rgba(0, 85, 144, 0.3)", borderTopColor: "#005590" }} />
                   <p className="text-sm">Memuat data analisa...</p>
                 </div>
               ) : !analysisData ? (
-                <div className="p-20 text-center text-white/70">
+                <div className="p-20 text-center text-[#64748b]">
                   <TrendingUp className="w-16 h-16 mx-auto mb-4 opacity-15" />
                   <p className="text-sm">Belum ada data analisa</p>
                 </div>
@@ -1318,17 +1319,17 @@ export default function PresensiPage() {
                       <FileText className="w-4 h-4" />Aturan Kehadiran
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="rounded-2xl p-4" style={{ background: "rgba(255, 255, 255, 0.05)" }}>
+                      <div className="rounded-2xl p-4" style={{ background: "rgba(0, 85, 144, 0.03)" }}>
                         <p className="text-xs font-semibold text-[#005590] mb-1.5">Jam Kerja</p>
-                        <p className="text-xs text-white/70 leading-relaxed">08:00 - 14:00 WIB (6 jam)</p>
+                        <p className="text-xs text-[#64748b] leading-relaxed">08:00 - 14:00 WIB (6 jam)</p>
                       </div>
-                      <div className="rounded-2xl p-4" style={{ background: "rgba(255, 255, 255, 0.05)" }}>
-                        <p className="text-xs font-semibold mb-1.5" style={{ color: "#e6b800" }}>Terlambat</p>
-                        <p className="text-xs text-white/70 leading-relaxed">Absen hadir setelah pukul 08:00. Pegawai terlambat tidak mendapatkan hak lembur.</p>
+                      <div className="rounded-2xl p-4" style={{ background: "rgba(0, 85, 144, 0.03)" }}>
+                        <p className="text-xs font-semibold mb-1.5" style={{ color: "#d97706" }}>Terlambat</p>
+                        <p className="text-xs text-[#64748b] leading-relaxed">Absen hadir setelah pukul 08:00. Pegawai terlambat tidak mendapatkan hak lembur.</p>
                       </div>
-                      <div className="rounded-2xl p-4" style={{ background: "rgba(255, 255, 255, 0.05)" }}>
-                        <p className="text-xs font-semibold mb-1.5" style={{ color: "#ffcb01" }}>Lembur</p>
-                        <p className="text-xs text-white/70 leading-relaxed">Hanya pegawai yang hadir sebelum/tepat 08:00. Pulang mulai 15:00 = lembur 1 jam.</p>
+                      <div className="rounded-2xl p-4" style={{ background: "rgba(0, 85, 144, 0.03)" }}>
+                        <p className="text-xs font-semibold mb-1.5" style={{ color: "#d97706" }}>Lembur</p>
+                        <p className="text-xs text-[#64748b] leading-relaxed">Hanya pegawai yang hadir sebelum/tepat 08:00. Pulang mulai 15:00 = lembur 1 jam.</p>
                       </div>
                     </div>
                   </div>
@@ -1341,7 +1342,7 @@ export default function PresensiPage() {
                       </h3>
                       <ul className="space-y-2.5">
                         {analysisData.insights.map((insight, i) => (
-                          <li key={i} className="text-xs text-white/70 flex gap-2.5">
+                          <li key={i} className="text-xs text-[#64748b] flex gap-2.5">
                             <span className="font-bold mt-px flex-shrink-0" style={{ color: "#005590" }}>&#9679;</span>
                             <span className="leading-relaxed">{insight}</span>
                           </li>
@@ -1354,11 +1355,11 @@ export default function PresensiPage() {
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {[
                       { label: "Pegawai Aktif", val: analysisData.summary.uniquePeople, color: "#005590" },
-                      { label: "Terlambat (>08:00)", val: analysisData.summary.latePeople, color: analysisData.summary.latePeople === 0 ? "#005590" : "#e6b800" },
-                      { label: "Total Lembur", val: analysisData.summary.totalOvertimeHours > 0 ? `${analysisData.summary.totalOvertimeHours} jam` : "0 jam", color: analysisData.summary.totalOvertimeHours > 0 ? "#ffcb01" : "#005590" },
+                      { label: "Terlambat (>08:00)", val: analysisData.summary.latePeople, color: analysisData.summary.latePeople === 0 ? "#005590" : "#d97706" },
+                      { label: "Total Lembur", val: analysisData.summary.totalOvertimeHours > 0 ? `${analysisData.summary.totalOvertimeHours} jam` : "0 jam", color: analysisData.summary.totalOvertimeHours > 0 ? "#d97706" : "#005590" },
                     ].map((s, i) => (
                       <div key={i} className="stat-card-apple text-center">
-                        <p className="text-2xl font-bold text-white">{s.val}</p>
+                        <p className="text-2xl font-bold text-[#1e293b]">{s.val}</p>
                         <p className="text-xs mt-1" style={{ color: s.color }}>{s.label}</p>
                       </div>
                     ))}
@@ -1368,15 +1369,113 @@ export default function PresensiPage() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
                       { label: "Total Hadir", val: analysisData.summary.totalHadir, color: "#005590" },
-                      { label: "Total Pulang", val: analysisData.summary.totalPulang, color: "#e6b800" },
-                      { label: "Total WFH", val: analysisData.summary.totalWFH, color: "#ffcb01" },
+                      { label: "Total Pulang", val: analysisData.summary.totalPulang, color: "#d97706" },
+                      { label: "Total WFH", val: analysisData.summary.totalWFH, color: "#d97706" },
                       { label: "Total Rekord", val: analysisData.summary.totalRecords, color: "#005590" },
                     ].map((s, i) => (
                       <div key={i} className="stat-card-apple text-center">
-                        <p className="text-2xl font-bold text-white">{s.val}</p>
+                        <p className="text-2xl font-bold text-[#1e293b]">{s.val}</p>
                         <p className="text-xs mt-1" style={{ color: s.color }}>{s.label}</p>
                       </div>
                     ))}
+                  </div>
+
+                  {/* ===== CHARTS ===== */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Bar Chart: Rekap Harian Hadir vs Pulang */}
+                    {analysisData.dailyBreakdown.length > 0 && (
+                      <div className="apple-card p-6">
+                        <h3 className="text-sm font-semibold text-[#1e293b] mb-1 flex items-center gap-2">
+                          <BarChart3 className="w-4 h-4 text-[#005590]" />
+                          Trend Kehadiran Harian
+                        </h3>
+                        <p className="text-xs text-[#94a3b8] mb-4">Hadir vs Pulang per hari</p>
+                        <div className="w-full" style={{ height: 280 }}>
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={analysisData.dailyBreakdown} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                              <XAxis
+                                dataKey="day"
+                                tick={{ fontSize: 10, fill: '#64748b' }}
+                                tickLine={false}
+                                axisLine={{ stroke: '#e2e8f0' }}
+                              />
+                              <YAxis
+                                tick={{ fontSize: 11, fill: '#64748b' }}
+                                tickLine={false}
+                                axisLine={{ stroke: '#e2e8f0' }}
+                              />
+                              <Tooltip
+                                contentStyle={{
+                                  background: '#ffffff',
+                                  border: '1px solid #e2e8f0',
+                                  borderRadius: '10px',
+                                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                                  fontSize: '12px',
+                                }}
+                                labelStyle={{ color: '#1e293b', fontWeight: 600 }}
+                              />
+                              <Bar dataKey="hadir" name="Hadir" fill="#005590" radius={[4, 4, 0, 0]} maxBarSize={28} />
+                              <Bar dataKey="pulang" name="Pulang" fill="#f59e0b" radius={[4, 4, 0, 0]} maxBarSize={28} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pie Chart: Distribusi per Unit Kerja */}
+                    {analysisData.unitBreakdown.length > 0 && (
+                      <div className="apple-card p-6">
+                        <h3 className="text-sm font-semibold text-[#1e293b] mb-1 flex items-center gap-2">
+                          <PieChart className="w-4 h-4 text-[#005590]" />
+                          Distribusi per Unit Kerja
+                        </h3>
+                        <p className="text-xs text-[#94a3b8] mb-4">Jumlah kehadiran tiap unit</p>
+                        <div className="w-full" style={{ height: 280 }}>
+                          <ResponsiveContainer width="100%" height="100%">
+                            <RechartsPie>
+                              <Pie
+                                data={analysisData.unitBreakdown
+                                  .filter(u => u.hadir > 0 || u.pulang > 0)
+                                  .map(u => ({ name: u.unitKerja, value: u.hadir + u.pulang }))
+                                  .sort((a, b) => b.value - a.value)
+                                  .slice(0, 10)
+                                }
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={55}
+                                outerRadius={95}
+                                paddingAngle={2}
+                                dataKey="value"
+                              >
+                                {[
+                                  '#005590', '#004a7e', '#0066aa', '#003d66',
+                                  '#f59e0b', '#d97706', '#eab308',
+                                  '#0ea5e9', '#64748b', '#94a3b8',
+                                ].map((color, index) => (
+                                  <Cell key={index} fill={color} />
+                                ))}
+                              </Pie>
+                              <Tooltip
+                                contentStyle={{
+                                  background: '#ffffff',
+                                  border: '1px solid #e2e8f0',
+                                  borderRadius: '10px',
+                                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                                  fontSize: '12px',
+                                }}
+                                formatter={(value: number) => [`${value} kehadiran`, 'Total']}
+                              />
+                              <Legend
+                                wrapperStyle={{ fontSize: '11px' }}
+                                iconType="circle"
+                                iconSize={8}
+                              />
+                            </RechartsPie>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* ===== Ringkasan Tab ===== */}
@@ -1385,12 +1484,12 @@ export default function PresensiPage() {
                       {/* Daily Breakdown */}
                       <div className="apple-card overflow-hidden rounded-2xl">
                         <div className="p-6 pb-0">
-                          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                            <BarChart3 className="w-4 h-4 text-white/70" />Rekap Harian
+                          <h3 className="text-lg font-semibold text-[#1e293b] mb-4 flex items-center gap-2">
+                            <BarChart3 className="w-4 h-4 text-[#64748b]" />Rekap Harian
                           </h3>
                         </div>
                         {analysisData.dailyBreakdown.length === 0 ? (
-                          <p className="text-sm text-white/70 text-center py-8">Belum ada data</p>
+                          <p className="text-sm text-[#64748b] text-center py-8">Belum ada data</p>
                         ) : (
                           <div className="overflow-x-auto custom-scrollbar">
                             <table className="data-table text-sm">
@@ -1407,20 +1506,20 @@ export default function PresensiPage() {
                               </thead>
                               <tbody>
                                 {analysisData.dailyBreakdown.map((d, i) => {
-                                  const statusColor = d.status === 'Baik' ? 'bg-[#005590]/15 text-[#005590]' : d.status === 'Cukup' ? 'bg-[#ffcb01]/15 text-[#ffcb01]' : 'bg-[#e6b800]/15 text-[#e6b800]';
+                                  const statusColor = d.status === 'Baik' ? 'bg-[#005590]/15 text-[#005590]' : d.status === 'Cukup' ? 'bg-[#f59e0b]/15 text-[#d97706]' : 'bg-[#f59e0b]/15 text-[#005590]';
                                   return (
                                     <tr key={i}>
                                       <td className="text-xs whitespace-nowrap">{d.day}</td>
                                       <td className="text-center"><span style={{ color: "#005590" }} className="font-medium">{d.hadir}</span></td>
-                                      <td className="text-center"><span style={{ color: "#e6b800" }} className="font-medium">{d.pulang}</span></td>
-                                      <td className="text-center font-medium text-white">{d.unique}</td>
+                                      <td className="text-center"><span style={{ color: "#d97706" }} className="font-medium">{d.pulang}</span></td>
+                                      <td className="text-center font-medium text-[#1e293b]">{d.unique}</td>
                                       <td className="text-center">
-                                        <span className={`apple-badge ${d.lateCount > 0 ? 'bg-[#e6b800]/15 text-[#e6b800]' : 'bg-[#005590]/15 text-[#005590]'}`}>
+                                        <span className={`apple-badge ${d.lateCount > 0 ? 'bg-[#f59e0b]/15 text-[#005590]' : 'bg-[#005590]/15 text-[#005590]'}`}>
                                           {d.lateCount}
                                         </span>
                                       </td>
                                       <td className="text-center">
-                                        <span className={`apple-badge ${d.overtimeHours > 0 ? 'bg-[#ffcb01]/15 text-[#ffcb01]' : 'bg-[#005590]/15 text-[#005590]'}`}>
+                                        <span className={`apple-badge ${d.overtimeHours > 0 ? 'bg-[#f59e0b]/15 text-[#d97706]' : 'bg-[#005590]/15 text-[#005590]'}`}>
                                           {d.overtimeHours > 0 ? `${d.overtimeHours} jam` : '-'}
                                         </span>
                                       </td>
@@ -1438,9 +1537,9 @@ export default function PresensiPage() {
 
                       {/* Lembur Detail Records */}
                       {analysisData.lemburRecords && analysisData.lemburRecords.length > 0 && (
-                        <div className="apple-card overflow-hidden rounded-2xl" style={{ borderLeft: "3px solid #ffcb01" }}>
+                        <div className="apple-card overflow-hidden rounded-2xl" style={{ borderLeft: "3px solid #005590" }}>
                           <div className="p-6 pb-0">
-                            <h3 className="text-sm font-semibold mb-4 flex items-center gap-2" style={{ color: "#ffcb01" }}>
+                            <h3 className="text-sm font-semibold mb-4 flex items-center gap-2" style={{ color: "#d97706" }}>
                               <Clock className="w-4 h-4" />Detail Lembur Pegawai
                             </h3>
                           </div>
@@ -1458,12 +1557,12 @@ export default function PresensiPage() {
                               <tbody>
                                 {analysisData.lemburRecords.map((r, i) => (
                                   <tr key={i}>
-                                    <td className="text-xs font-medium text-white">{r.namaLengkap}</td>
+                                    <td className="text-xs font-medium text-[#1e293b]">{r.namaLengkap}</td>
                                     <td className="text-center text-xs">{r.date}</td>
                                     <td className="text-center text-xs">{r.hadirTime}</td>
                                     <td className="text-center text-xs">{r.pulangTime}</td>
                                     <td className="text-center">
-                                      <span className="apple-badge bg-[#ffcb01]/15 text-[#ffcb01] font-bold">{r.lemburHours} jam</span>
+                                      <span className="apple-badge bg-[#f59e0b]/15 text-[#d97706] font-bold">{r.lemburHours} jam</span>
                                     </td>
                                   </tr>
                                 ))}
@@ -1479,12 +1578,12 @@ export default function PresensiPage() {
                   {analisaSubTab === "unit" && (
                     <div className="apple-card overflow-hidden rounded-2xl">
                       <div className="p-6 pb-0">
-                        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                          <Building2 className="w-4 h-4 text-white/70" />Rekap Per Unit Kerja
+                        <h3 className="text-lg font-semibold text-[#1e293b] mb-4 flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-[#64748b]" />Rekap Per Unit Kerja
                         </h3>
                       </div>
                       {analysisData.unitBreakdown.length === 0 ? (
-                        <p className="text-sm text-white/70 text-center py-8">Belum ada data</p>
+                        <p className="text-sm text-[#64748b] text-center py-8">Belum ada data</p>
                       ) : (
                         <div className="overflow-x-auto custom-scrollbar">
                           <table className="data-table text-sm">
@@ -1502,21 +1601,21 @@ export default function PresensiPage() {
                             </thead>
                             <tbody>
                               {analysisData.unitBreakdown.map((u, i) => {
-                                const statusColor = u.status === 'Aktif' ? 'bg-[#005590]/15 text-[#005590]' : u.status === 'Cukup' ? 'bg-[#ffcb01]/15 text-[#ffcb01]' : 'bg-[#e6b800]/15 text-[#e6b800]';
+                                const statusColor = u.status === 'Aktif' ? 'bg-[#005590]/15 text-[#005590]' : u.status === 'Cukup' ? 'bg-[#f59e0b]/15 text-[#d97706]' : 'bg-[#f59e0b]/15 text-[#005590]';
                                 return (
                                   <tr key={i}>
-                                    <td className="text-xs font-medium text-white">{i + 1}. {u.unitKerja}</td>
-                                    <td className="text-center font-bold text-white">{u.unique}</td>
+                                    <td className="text-xs font-medium text-[#1e293b]">{i + 1}. {u.unitKerja}</td>
+                                    <td className="text-center font-bold text-[#1e293b]">{u.unique}</td>
                                     <td className="text-center"><span style={{ color: "#005590" }}>{u.hadir}</span></td>
-                                    <td className="text-center"><span style={{ color: "#e6b800" }}>{u.pulang}</span></td>
-                                    <td className="text-center"><span style={{ color: "#ffcb01" }}>{u.wfh}</span></td>
+                                    <td className="text-center"><span style={{ color: "#d97706" }}>{u.pulang}</span></td>
+                                    <td className="text-center"><span style={{ color: "#d97706" }}>{u.wfh}</span></td>
                                     <td className="text-center">
-                                      <span className={`apple-badge ${u.lateCount > 0 ? 'bg-[#e6b800]/15 text-[#e6b800]' : 'bg-[#005590]/15 text-[#005590]'}`}>
+                                      <span className={`apple-badge ${u.lateCount > 0 ? 'bg-[#f59e0b]/15 text-[#005590]' : 'bg-[#005590]/15 text-[#005590]'}`}>
                                         {u.lateCount}
                                       </span>
                                     </td>
                                     <td className="text-center">
-                                      <span className={`apple-badge ${u.overtimeHours > 0 ? 'bg-[#ffcb01]/15 text-[#ffcb01]' : 'bg-[#005590]/15 text-[#005590]'}`}>
+                                      <span className={`apple-badge ${u.overtimeHours > 0 ? 'bg-[#f59e0b]/15 text-[#d97706]' : 'bg-[#005590]/15 text-[#005590]'}`}>
                                         {u.overtimeHours > 0 ? `${u.overtimeHours} jam` : '-'}
                                       </span>
                                     </td>
@@ -1537,12 +1636,12 @@ export default function PresensiPage() {
                   {analisaSubTab === "personal" && (
                     <div className="apple-card overflow-hidden rounded-2xl">
                       <div className="p-6 pb-0">
-                        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                          <Users className="w-4 h-4 text-white/70" />Rekap Per Orang
+                        <h3 className="text-lg font-semibold text-[#1e293b] mb-4 flex items-center gap-2">
+                          <Users className="w-4 h-4 text-[#64748b]" />Rekap Per Orang
                         </h3>
                       </div>
                       {analysisData.personBreakdown.length === 0 ? (
-                        <p className="text-sm text-white/70 text-center py-8">Belum ada data</p>
+                        <p className="text-sm text-[#64748b] text-center py-8">Belum ada data</p>
                       ) : (
                         <div className="overflow-x-auto custom-scrollbar">
                           <table className="data-table text-sm">
@@ -1561,10 +1660,10 @@ export default function PresensiPage() {
                             </thead>
                             <tbody>
                               {analysisData.personBreakdown.map((p, i) => {
-                                const statusColor = p.status === 'Disiplin' ? 'bg-[#005590]/15 text-[#005590]' : p.status === 'Cukup' ? 'bg-[#ffcb01]/15 text-[#ffcb01]' : 'bg-[#e6b800]/15 text-[#e6b800]';
+                                const statusColor = p.status === 'Disiplin' ? 'bg-[#005590]/15 text-[#005590]' : p.status === 'Cukup' ? 'bg-[#f59e0b]/15 text-[#d97706]' : 'bg-[#f59e0b]/15 text-[#005590]';
                                 return (
                                   <tr key={i}>
-                                    <td className="font-medium text-white text-xs">{i + 1}. {p.namaLengkap}</td>
+                                    <td className="font-medium text-[#1e293b] text-xs">{i + 1}. {p.namaLengkap}</td>
                                     <td className="hidden md:table-cell text-xs">{p.unitKerja}</td>
                                     <td className="text-center">
                                       <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold" style={{ background: "rgba(255,255,255,0.15)", color: "#005590" }}>{p.activeDays}</span>
@@ -1573,18 +1672,18 @@ export default function PresensiPage() {
                                       <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold" style={{ background: "rgba(255,255,255,0.15)", color: "#005590" }}>{p.hadir}</span>
                                     </td>
                                     <td className="text-center">
-                                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold" style={{ background: "rgba(255,203,1,0.12)", color: "#e6b800" }}>{p.pulang}</span>
+                                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold" style={{ background: "rgba(245,158,11,0.1)", color: "#d97706" }}>{p.pulang}</span>
                                     </td>
                                     <td className="text-center">
-                                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold" style={{ background: "rgba(255,203,1,0.12)", color: "#ffcb01" }}>{p.wfh}</span>
+                                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold" style={{ background: "rgba(245,158,11,0.1)", color: "#d97706" }}>{p.wfh}</span>
                                     </td>
                                     <td className="text-center">
-                                      <span className={`apple-badge ${p.lateCount > 0 ? 'bg-[#e6b800]/15 text-[#e6b800]' : 'bg-[#005590]/15 text-[#005590]'}`}>
+                                      <span className={`apple-badge ${p.lateCount > 0 ? 'bg-[#f59e0b]/15 text-[#005590]' : 'bg-[#005590]/15 text-[#005590]'}`}>
                                         {p.lateCount > 0 ? `${p.lateCount}x` : '-'}
                                       </span>
                                     </td>
                                     <td className="text-center">
-                                      <span className={`apple-badge ${p.lemburHours > 0 ? 'bg-[#ffcb01]/15 text-[#ffcb01]' : 'bg-[#005590]/15 text-[#005590]'}`}>
+                                      <span className={`apple-badge ${p.lemburHours > 0 ? 'bg-[#f59e0b]/15 text-[#d97706]' : 'bg-[#005590]/15 text-[#005590]'}`}>
                                         {p.lemburHours > 0 ? `${p.lemburHours} jam` : '-'}
                                       </span>
                                     </td>
@@ -1612,7 +1711,7 @@ export default function PresensiPage() {
       <footer className="mt-auto">
         <div className="apple-divider" />
         <div className="py-8 text-center">
-          <p className="text-xs text-white/70">
+          <p className="text-xs text-[#64748b]">
             Sistem Presensi Digital &copy; {new Date().getFullYear()} &mdash; Universitas Tulungagung
           </p>
         </div>
@@ -1624,8 +1723,8 @@ export default function PresensiPage() {
       {selectedPhoto && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)" }} onClick={() => setSelectedPhoto(null)}>
           <div className="relative max-w-lg w-full rounded-2xl p-2 animate-fade-in-up" style={{ background: "rgba(255,255,255,0.98)", border: "1px solid rgba(0,85,144,0.1)" }} onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setSelectedPhoto(null)} className="absolute -top-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center transition-colors z-10" style={{ background: "#005590" }}>
-              <X className="w-4 h-4 text-white" />
+            <button onClick={() => setSelectedPhoto(null)} className="absolute -top-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center transition-colors z-10" style={{ background: "#ffffff" }}>
+              <X className="w-4 h-4 text-[#1e293b]" />
             </button>
             <img src={selectedPhoto} alt="Foto Presensi" className="w-full rounded-xl" />
           </div>
@@ -1638,20 +1737,20 @@ export default function PresensiPage() {
           <div className="relative max-w-sm w-full rounded-2xl p-6 sm:p-8 animate-fade-in-up" style={{ background: "rgba(255,255,255,0.98)", border: "1px solid rgba(0,85,144,0.1)" }} onClick={(e) => e.stopPropagation()}>
             {/* Close button */}
             <button onClick={() => { setShowPasswordModal(false); setPasswordInput(""); setPasswordError(false); }} className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-colors" style={{ background: "rgba(0,85,144,0.08)" }}>
-              <X className="w-4 h-4 text-white/70" />
+              <X className="w-4 h-4 text-[#64748b]" />
             </button>
 
             {/* Lock icon */}
             <div className="flex justify-center mb-5">
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255, 203, 1, 0.12)" }}>
-                <Lock className="w-7 h-7" style={{ color: "#ffcb01" }} />
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: "rgba(245, 158, 11, 0.08)" }}>
+                <Lock className="w-7 h-7" style={{ color: "#d97706" }} />
               </div>
             </div>
 
             {/* Title */}
-            <h3 className="text-lg font-bold text-white text-center mb-2">Menu Terkunci</h3>
-            <p className="text-xs text-white/70 text-center mb-6">
-              Menu <span className="text-white font-medium">{pendingTab === "laporan" ? "Laporan" : "Analisa"}</span> memerlukan password untuk mengakses
+            <h3 className="text-lg font-bold text-[#1e293b] text-center mb-2">Menu Terkunci</h3>
+            <p className="text-xs text-[#64748b] text-center mb-6">
+              Menu <span className="text-[#1e293b] font-medium">{pendingTab === "laporan" ? "Laporan" : "Analisa"}</span> memerlukan password untuk mengakses
             </p>
 
             {/* Password input */}
@@ -1669,13 +1768,13 @@ export default function PresensiPage() {
 
             {/* Error message */}
             {passwordError && (
-              <p className="text-xs text-[#e6b800] text-center mb-4 animate-fade-in-up">
+              <p className="text-xs text-[#005590] text-center mb-4 animate-fade-in-up">
                 Password salah. Silakan coba lagi.
               </p>
             )}
 
             {/* Submit button */}
-            <button onClick={handlePasswordSubmit} className="apple-btn apple-btn-blue w-full" style={{ background: "#ffcb01" }}>
+            <button onClick={handlePasswordSubmit} className="apple-btn apple-btn-blue w-full" style={{ background: "#22c55e" }}>
               <Lock className="w-4 h-4" />
               Buka Kunci
             </button>
