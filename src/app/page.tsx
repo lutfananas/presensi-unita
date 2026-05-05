@@ -118,6 +118,108 @@ export default function PresensiPage() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // ============ LOADING SCREEN STATE ============
+  const [isLoadingScreen, setIsLoadingScreen] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [terminalLines, setTerminalLines] = useState<string[]>([]);
+  const [showLoadingContent, setShowLoadingContent] = useState(false);
+  const codeRainRef = useRef<HTMLCanvasElement>(null);
+
+  // Terminal boot sequence
+  const bootLines = [
+    { text: '> initializing system...', delay: 200, color: '#22c55e' },
+    { text: '> loading geolocation module...... OK', delay: 600, color: '#22c55e' },
+    { text: '> connecting to database.......... OK', delay: 1200, color: '#22c55e' },
+    { text: '> verifying security protocols..... OK', delay: 1800, color: '#22c55e' },
+    { text: '> gps anti-spoof engine........... ACTIVE', delay: 2400, color: '#ffcb01' },
+    { text: '> loading attendance modules....... OK', delay: 3000, color: '#22c55e' },
+    { text: '> system ready.', delay: 3600, color: '#00a8ff' },
+  ];
+
+  useEffect(() => {
+    // Show content after short delay
+    const contentTimer = setTimeout(() => setShowLoadingContent(true), 100);
+    return () => clearTimeout(contentTimer);
+  }, []);
+
+  // Terminal typing animation
+  useEffect(() => {
+    if (!showLoadingContent) return;
+    const timers: NodeJS.Timeout[] = [];
+    bootLines.forEach((line) => {
+      const timer = setTimeout(() => {
+        setTerminalLines((prev) => [...prev, line.text]);
+      }, line.delay);
+      timers.push(timer);
+    });
+    return () => timers.forEach(clearTimeout);
+  }, [showLoadingContent]);
+
+  // Progress bar animation
+  useEffect(() => {
+    if (!showLoadingContent) return;
+    const steps = [5, 12, 25, 40, 55, 70, 85, 100];
+    const delays = [200, 600, 1200, 1800, 2400, 3000, 3600, 4200];
+    const timers: NodeJS.Timeout[] = [];
+    steps.forEach((target, i) => {
+      const timer = setTimeout(() => setLoadingProgress(target), delays[i]);
+      timers.push(timer);
+    });
+    return () => timers.forEach(clearTimeout);
+  }, [showLoadingContent]);
+
+  // Code Rain canvas animation
+  useEffect(() => {
+    const canvas = codeRainRef.current;
+    if (!canvas || !showLoadingContent) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const chars = 'UNIVERSITASTULUNGAGUNG01アカサタナハマヤラワ'.split('');
+    const fontSize = 14;
+    const columns = Math.floor(canvas.width / fontSize);
+    const drops: number[] = Array(columns).fill(1).map(() => Math.random() * -50);
+
+    const draw = () => {
+      ctx.fillStyle = 'rgba(10, 14, 26, 0.06)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#005590';
+      ctx.font = `${fontSize}px monospace`;
+      for (let i = 0; i < drops.length; i++) {
+        const char = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    };
+    const interval = setInterval(draw, 45);
+    return () => { clearInterval(interval); window.removeEventListener('resize', resize); };
+  }, [showLoadingContent]);
+
+  // End loading screen
+  useEffect(() => {
+    if (!showLoadingContent) return;
+    const timer = setTimeout(() => {
+      setIsLoadingScreen(false);
+    }, 4800);
+    return () => clearTimeout(timer);
+  }, [showLoadingContent]);
+
+  // Generate random particles
+  const particles = Array.from({ length: 30 }, (_, i) => ({
+    id: i,
+    left: `${Math.random() * 100}%`,
+    animDuration: `${4 + Math.random() * 8}s`,
+    animDelay: `${Math.random() * 5}s`,
+    size: `${1 + Math.random() * 3}px`,
+  }));
+
   // Password Protection State
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -782,6 +884,65 @@ export default function PresensiPage() {
   // the iOS Safari bug where position:fixed breaks inside flex containers.
   return (
     <>
+      {/* ===== EPIC LOADING SCREEN ===== */}
+      {isLoadingScreen && showLoadingContent && (
+        <div className={`loading-overlay ${loadingProgress >= 100 ? 'fade-out' : ''}`}>
+          {/* Background layers */}
+          <canvas ref={codeRainRef} className="code-rain" />
+          <div className="loading-grid" />
+          <div className="loading-scanlines" />
+
+          {/* Floating particles */}
+          <div className="loading-particles">
+            {particles.map((p) => (
+              <div key={p.id} className="particle" style={{
+                left: p.left,
+                width: p.size,
+                height: p.size,
+                animationDuration: p.animDuration,
+                animationDelay: p.animDelay,
+              }} />
+            ))}
+          </div>
+
+          {/* Content */}
+          {/* Glitch Title */}
+          <div className="glitch-text" data-text="UNITA">UNITA</div>
+          <div className="loading-subtitle">Presensi Digital</div>
+
+          {/* Spinning Ring + Logo */}
+          <div className="loading-ring">
+            <div className="loading-ring-glow" />
+            <div className="w-14 h-14 rounded-xl overflow-hidden relative z-10">
+              <Image src="/logo-universitas.png" alt="Logo" width={56} height={56} className="rounded-xl object-contain" />
+            </div>
+          </div>
+
+          {/* Terminal */}
+          <div className="loading-terminal">
+            <div className="terminal-header">
+              <div className="terminal-dot" style={{ background: '#ef4444' }} />
+              <div className="terminal-dot" style={{ background: '#f59e0b' }} />
+              <div className="terminal-dot" style={{ background: '#22c55e' }} />
+              <span style={{ marginLeft: 8, fontSize: 10, color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>system@unita ~ presensi</span>
+            </div>
+            <div className="terminal-body">
+              {terminalLines.map((line, i) => (
+                <div key={i} className="terminal-line" style={{ animationDelay: '0s', color: line.includes('ACTIVE') ? '#ffcb01' : line.includes('system ready') ? '#00a8ff' : '#22c55e' }}>
+                  {line}{i === terminalLines.length - 1 && <span className="cursor" />}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="loading-progress-track">
+            <div className="loading-progress-bar" style={{ width: `${loadingProgress}%` }} />
+          </div>
+          <div className="loading-percentage">{loadingProgress}%</div>
+        </div>
+      )}
+
       {/* ===== Fixed Navigation (Frosted Glass) ===== */}
       {/* Top nav - only shows logo on mobile */}
       <nav className="apple-nav">
