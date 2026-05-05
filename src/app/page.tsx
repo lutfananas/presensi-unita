@@ -855,6 +855,7 @@ export default function PresensiPage() {
                         <option value="Dinas Luar Kampus - Pendidikan dan Penunjang (Kuliah Tamu, Seminar, dll)">Dinas Luar Kampus - Pendidikan dan Penunjang (Kuliah Tamu, Seminar, dll)</option>
                         <option value="Dinas Luar Kampus - Penelitian">Dinas Luar Kampus - Penelitian</option>
                         <option value="Dinas Luar Kampus - Pengabdian kepada Masyarakat">Dinas Luar Kampus - Pengabdian kepada Masyarakat</option>
+                        <option value="Study Lanjut">Study Lanjut</option>
                       </select>
                       <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60 pointer-events-none" />
                     </div>
